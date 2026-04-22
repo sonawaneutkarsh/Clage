@@ -1,4 +1,5 @@
 import pygame as pg
+from random import choice
 from typing import Optional, Any, List
 
 class Grid:
