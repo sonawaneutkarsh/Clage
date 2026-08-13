@@ -149,8 +149,5 @@ for org in organisms:
 
 ## Layout
 
-- `progress/` — build notes and analysis for each layer (genome, phenotype,
-  mutation, crossover, speciation, population, world, experiments, diversity,
-  visualization, validation, review fixes).
 - `tests/` — 184 tests (`pytest`).
 - `results/` — raw experiment output (gitignored).
