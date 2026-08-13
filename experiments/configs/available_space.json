@@ -1,0 +1,9 @@
+{
+  "name": "available_space",
+  "extends": "base.json",
+  "conditions": [
+    {"name": "control", "parameter": null, "value": null},
+    {"name": "space_small", "parameter": "available_space", "value": 12},
+    {"name": "space_large", "parameter": "available_space", "value": 36}
+  ]
+}

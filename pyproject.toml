@@ -10,11 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 
 dependencies = [
-    "pygame-ce>=2.0",
-    "numpy>=1.0",
-    "matplotlib>=3.0",
-    "tqdm>=4.0",
-    "neat-python>=0.92"
+    "matplotlib>=3.0"
 ]
 
 [project.optional-dependencies]
@@ -39,4 +35,6 @@ testpaths = ["tests"]
 line-length = 88
 target-version = ['py310']
 
-py-modules = ["evolve_sim", "grid", "main", "genome"]
+[tool.setuptools.packages.find]
+include = ["neat", "world", "experiments", "diversity", "visual", "benchmarks"]
+exclude = ["tests*"]

@@ -1,0 +1,9 @@
+{
+  "name": "reproduction_cost",
+  "extends": "base.json",
+  "conditions": [
+    {"name": "control", "parameter": null, "value": null},
+    {"name": "repro_cheap", "parameter": "reproduction_threshold", "value": 0.5},
+    {"name": "repro_costly", "parameter": "reproduction_threshold", "value": 0.95}
+  ]
+}

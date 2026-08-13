@@ -1,0 +1,56 @@
+{
+  "name": "base",
+  "base": {
+    "neat": {
+      "population_size": 20,
+      "generations": 25,
+      "elitism": 1,
+      "crossover_rate": 0.75,
+      "mutation": {
+        "weight_prob": 0.8,
+        "weight_sigma": 0.1,
+        "replace_prob": 0.1,
+        "bias_prob": 0.2,
+        "bias_sigma": 0.1,
+        "add_connection_prob": 0.05,
+        "add_node_prob": 0.01,
+        "enable_connection_prob": 0.05,
+        "disable_connection_prob": 0.1,
+        "weight_bounds": [-3.0, 3.0]
+      },
+      "speciation": {
+        "excess_coef": 1.0,
+        "disjoint_coef": 1.0,
+        "weight_coef": 0.4,
+        "compatibility_threshold": 3.0,
+        "small_genome_threshold": 20,
+        "stagnation_threshold": 15
+      }
+    },
+    "world": {
+      "width": 20,
+      "height": 20,
+      "ticks": 300,
+      "initial_energy": 1.0,
+      "max_energy": 1.0,
+      "metabolism": 0.005,
+      "food_energy": 0.5,
+      "initial_food": 60,
+      "food_target": 60,
+      "food_regrowth_per_tick": 1,
+      "density_radius": 2,
+      "repro_threshold": 0.7,
+      "repro_fraction": 0.5,
+      "seed_base": 0,
+      "seed_stride": 1000
+    },
+    "interface": {
+      "input_ids": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      "output_ids": [10, 11, 12, 13]
+    }
+  },
+  "seeds": [0, 1, 2, 3, 4],
+  "conditions": [
+    {"name": "control", "parameter": null, "value": null}
+  ]
+}

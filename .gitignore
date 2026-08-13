@@ -1,2 +1,9 @@
 node_modules/
 .env
+.venv/
+__pycache__/
+results/
+progress/
+clage.egg-info/
+benchmarks/plots/
+.DS_Store

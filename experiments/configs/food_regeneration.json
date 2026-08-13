@@ -1,0 +1,9 @@
+{
+  "name": "food_regeneration",
+  "extends": "base.json",
+  "conditions": [
+    {"name": "control", "parameter": null, "value": null},
+    {"name": "regrowth_none", "parameter": "food_regeneration_rate", "value": 0},
+    {"name": "regrowth_fast", "parameter": "food_regeneration_rate", "value": 10}
+  ]
+}

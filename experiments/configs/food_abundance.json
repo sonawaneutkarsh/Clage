@@ -1,0 +1,9 @@
+{
+  "name": "food_abundance",
+  "extends": "base.json",
+  "conditions": [
+    {"name": "control", "parameter": null, "value": null},
+    {"name": "food_low", "parameter": "food_abundance", "value": 20},
+    {"name": "food_high", "parameter": "food_abundance", "value": 120}
+  ]
+}

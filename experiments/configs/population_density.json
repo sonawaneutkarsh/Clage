@@ -1,0 +1,9 @@
+{
+  "name": "population_density",
+  "extends": "base.json",
+  "conditions": [
+    {"name": "control", "parameter": null, "value": null},
+    {"name": "density_low", "parameter": "population_density", "value": 8},
+    {"name": "density_high", "parameter": "population_density", "value": 50}
+  ]
+}
