@@ -1,10 +1,6 @@
 # Clage
 
-A custom NEAT (NeuroEvolution of Augmenting Topologies) implementation paired
-with a 2D artificial-life environment, plus reproducible experiments, behavioral
-diversity metrics, and a pure-data visualization layer. The whole thing is
-built from scratch — no `neat-python` — and validated against controlled
-benchmark problems before use in the simulation.
+A from-scratch NEAT engine dropped into a 2D world where tiny organisms learn to move, eat, survive, and reproduce. Underneath the chaos are controlled benchmarks, seeded experiments, behavioral metrics, and 188 tests keeping everything honest.
 
 ```
 neat/          custom NEAT engine: genome, phenotype, innovation ledger, mutation,
