@@ -11,6 +11,15 @@ One generation:
     -> select survivors (per-species elites + roulette parents)
     -> allocate offspring -> crossover -> mutate -> next generation
 
+    Evaluation happens at the START of that sequence, so once ``run(1)`` returns
+    ``self.population`` already holds the *unevaluated* offspring of the generation
+    just finished. Those offspring carry copied or stale fitness values that no
+    longer describe their own structure (a crossover child is built with 0.0; an
+    elite copy keeps its parent's number). Evaluated per-generation values must
+    therefore be read from ``statistics[-1]`` or from the ``evaluated_best_genome``
+    property — never by scanning ``self.population``, which describes the next
+    generation, not the one that was measured.
+
 Invariants: population size is constant; offspring are structurally valid;
 best raw fitness is non-decreasing when ``elitism >= 1``; elites are never
 mutated.
@@ -96,7 +105,12 @@ class Population:
     # ------------------------------------------------------------------ run
 
     def run(self, generations: int) -> List[Dict]:
-        """Advance the population ``generations`` times. Returns new stats."""
+        """Advance the population ``generations`` times. Returns new stats.
+
+        On return ``self.population`` is the unevaluated next generation, so evaluated
+        per-generation values belong to ``statistics[-1]`` or ``evaluated_best_genome``,
+        not to a scan of ``self.population``.
+        """
         for _ in range(generations):
             self._next_generation()
         return self._stats[-generations:] if generations else []
@@ -104,6 +118,28 @@ class Population:
     @property
     def statistics(self) -> List[Dict]:
         return list(self._stats)
+
+    @property
+    def evaluated_best_genome(self) -> Optional[Genome]:
+        """The genome behind the most recently recorded ``best_fitness``.
+
+        ``None`` before the first generation has been evaluated (and again only if
+        the population is empty).
+
+        Every read returns a fresh defensive copy, so callers may keep the result and
+        change it freely without ever reaching engine state — the same isolation
+        guarantee ``best_genome`` already gives. Two consecutive reads therefore hand
+        back two distinct objects: identity comparisons, whether between two reads or
+        against any engine-internal object, are meaningless by design, so compare
+        values instead.
+
+        The returned snapshot is also not a member of ``self.population`` after
+        ``run()`` returns; that list holds unevaluated offspring carrying copied or
+        stale fitness.
+        """
+        if self._evaluated_best_genome is None:
+            return None
+        return self._evaluated_best_genome.copy()
 
     # ------------------------------------------------------------- lifecycle
 

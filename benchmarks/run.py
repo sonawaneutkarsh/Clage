@@ -4,6 +4,15 @@ Each trial runs the engine with default parameters on one problem, stepping
 one generation at a time, and records best/mean fitness, species count, and the
 best genome's node/connection counts per generation. It stops early the first
 generation the problem is solved.
+
+Row provenance: every per-generation row describes the genome the engine actually
+evaluated in that generation, read via ``Population.evaluated_best_genome`` — not the
+post-reproduction ``Population.population``, which after ``run(1)`` holds unevaluated
+offspring whose copied or stale fitness no longer matches their structure. All four
+champion fields of a row (``best_fitness``, ``best_node_count``,
+``best_connection_count`` and ``solved``, the last via ``problem.success_fn``) come
+from that one evaluated genome; ``mean_fitness`` and ``species_count`` come from the
+matching ``Population.statistics[-1]`` entry.
 """
 
 from __future__ import annotations
@@ -72,14 +81,20 @@ def run_trial(
 
     for generation in range(1, max_generations + 1):
         population.run(1)
-        gen_best = max(population.population, key=lambda g: g.fitness)
+        gen_best = population.evaluated_best_genome
+        if gen_best is None:
+            raise RuntimeError(
+                f"generation {generation}: Population.evaluated_best_genome is None, so no "
+                "evaluated champion exists for this generation; refusing to describe the row "
+                "with an unevaluated post-reproduction genome"
+            )
         stat = population.statistics[-1]
         is_solved = problem.success_fn(gen_best)
 
         history.append(
             {
                 "generation": generation,
-                "best_fitness": stat["best_fitness"],
+                "best_fitness": gen_best.fitness,
                 "mean_fitness": stat["mean_fitness"],
                 "species_count": stat["species_count"],
                 "best_node_count": len(gen_best.nodes),

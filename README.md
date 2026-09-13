@@ -1,6 +1,6 @@
 # Clage
 
-A from-scratch NEAT engine dropped into a 2D world where tiny organisms learn to move, eat, survive, and reproduce. Underneath the chaos are controlled benchmarks, seeded experiments, behavioral metrics, and 188 tests keeping everything honest.
+A from-scratch NEAT engine dropped into a 2D world where tiny organisms learn to move, eat, survive, and reproduce. Underneath the chaos are controlled benchmarks, seeded experiments, behavioral metrics, and 198 tests keeping everything honest.
 
 ```
 neat/          custom NEAT engine: genome, phenotype, innovation ledger, mutation,
@@ -21,7 +21,7 @@ benchmarks/    NEAT validation suite (OR / AND / XOR / sin)
 python3 -m venv .venv
 .venv/bin/pip install -e .          # installs matplotlib
 .venv/bin/pip install pytest
-.venv/bin/python -m pytest tests/   # 188 tests
+.venv/bin/python -m pytest tests/   # 198 tests
 ```
 
 ## Quick usage
@@ -132,6 +132,20 @@ for org in organisms:
   world, so `best_fitness` is a champion snapshot from one generation's world;
   only `best_fitness >= current evaluated best` is guaranteed. Compare across
   seeds/conditions, not as a single absolute number.
+- **Evaluation happens before reproduction.** After `pop.run(1)` returns,
+  `pop.population` already holds the *unevaluated* offspring of the generation just
+  finished, carrying copied or stale fitness that no longer describes their own
+  structure. Read evaluated per-generation values from `pop.statistics[-1]` or
+  `pop.evaluated_best_genome` (a fresh defensive copy on every read, `None` before the
+  first generation) — never by scanning `pop.population`.
+- **Measurement definitions.** `transition_entropy` pools boundary-respecting
+  transition counts across the organisms of a genome: only action pairs consecutive
+  within one organism's trace are counted, normalized by the total number of
+  within-trace transitions. `food_alignment` pairs each displacement with the food
+  direction observed immediately *before* the action that caused it, within a single
+  trace, which excludes each trace's first recorded action (the position preceding it
+  is never recorded). Results produced before this fix are **not** comparable for
+  `transition_entropy`, `food_alignment` and `behavioral_diversity`.
 - **No hard-coded behaviors.** Organisms move/turn/eat purely from
   observation → network → argmax action. Avoidance of other organisms is not
   even expressible (no directional organism sensor), and none of the diversity
@@ -145,5 +159,5 @@ for org in organisms:
 
 ## Layout
 
-- `tests/` — 188 tests (`pytest`).
+- `tests/` — 198 tests (`pytest`).
 - `results/` — raw experiment output (gitignored).

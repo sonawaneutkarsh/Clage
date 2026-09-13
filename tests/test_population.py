@@ -224,3 +224,62 @@ def test_engine_has_no_environment_dependencies():
     assert "pygame" not in source
     assert "evolve_sim" not in source
     assert "main" not in source
+
+
+def test_evaluated_best_genome_matches_recorded_statistics():
+    """The accessor agrees with the recorded statistics and stays isolated.
+
+    Consistency: ``None`` before the first ``run``, then equal in fitness to the last
+    recorded ``best_fitness`` after each generation. Isolation: every read is a fresh
+    defensive copy, so mutating a returned snapshot cannot reach engine state.
+
+    **Validates: Requirements 2.4, 2.5, 3.7, 3.15**
+    """
+    def fitness(genome, generation):
+        return sum(abs(c.weight) for c in genome.connections) + 1.0
+
+    pop = Population(fitness, population_size=6, seed=1,
+                     mutation_config=MutationConfig(add_connection_prob=0.5, add_node_prob=0.1))
+
+    assert pop.evaluated_best_genome is None
+
+    pop.run(1)
+    assert pop.evaluated_best_genome.fitness == pop.statistics[-1]["best_fitness"]
+
+    pop.run(1)
+    assert pop.evaluated_best_genome.fitness == pop.statistics[-1]["best_fitness"]
+
+    # Two consecutive reads are distinct objects: no caller holds the engine's instance.
+    assert pop.evaluated_best_genome is not pop.evaluated_best_genome
+    assert all(g is not pop.evaluated_best_genome for g in pop.population)
+
+    snapshot = pop.evaluated_best_genome
+    original_fitness = snapshot.fitness
+    recorded_best = pop.statistics[-1]["best_fitness"]
+    best_genome_fitness = pop.best_genome.fitness
+    best_genome_biases = {nid: node.bias for nid, node in pop.best_genome.nodes.items()}
+    node_id = sorted(snapshot.nodes)[0]
+    original_bias = snapshot.nodes[node_id].bias
+
+    snapshot.fitness = -12345.0
+    snapshot.nodes[node_id].bias = 999.0
+    if snapshot.connections:
+        original_weight = snapshot.connections[0].weight
+        original_enabled = snapshot.connections[0].enabled
+        innovation = snapshot.connections[0].innovation
+        snapshot.connections[0].weight = 888.0
+        snapshot.connections[0].enabled = not original_enabled
+    else:
+        original_weight = None
+
+    # The mutation is invisible everywhere.
+    again = pop.evaluated_best_genome
+    assert again.fitness == original_fitness
+    assert again.nodes[node_id].bias == original_bias
+    if original_weight is not None:
+        gene = next(c for c in again.connections if c.innovation == innovation)
+        assert gene.weight == original_weight
+        assert gene.enabled == original_enabled
+    assert pop.statistics[-1]["best_fitness"] == recorded_best
+    assert pop.best_genome.fitness == best_genome_fitness
+    assert {nid: node.bias for nid, node in pop.best_genome.nodes.items()} == best_genome_biases

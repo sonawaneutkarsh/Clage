@@ -1,0 +1,14 @@
+{
+  "pbtResults": {
+    "2. Write the Bug 3 exploration test and prove it fails on unfixed code": {
+      "status": "passed",
+      "failingExample": "Pre-fix failure observed exactly as documented in design.md.\n\nCase 4a — trace [(0,0,0,1.0,0.0,0.0), (0,1,0,-1.0,0.0,0.0)]:\n  assert 1.0 == -1.0 ± 1.0e-06\n  Obtained: 1.0   Expected: -1.0\n  (full sign inversion — a step east taken while food was reported west scored as perfect food-seeking)\n\nCase 4b — traces [(0,0,0,1.0,0.0,0.0),(0,1,0,1.0,0.0,0.0)] and [(0,5,5,0.0,1.0,0.0),(0,5,6,0.0,1.0,0.0)]:\n  measured food_alignment = 0.5, expected 1.0\n  (food_dirs flattened across organisms while deltas is not; the offset accumulates so organism B's step is scored against organism A's food direction, turning a +1.0 sample into 0.0)\n\nRoot cause confirmed while reading the failure: food_dirs appends on every index while deltas appends only for index > 0, and zip accepts the mismatch.",
+      "lastRunTimestamp": 1789272607482
+    },
+    "3.2 Verify the Bug 3 exploration test now passes": {
+      "status": "passed",
+      "lastRunTimestamp": 1789272630860
+    }
+  },
+  "executionHistory": {}
+}

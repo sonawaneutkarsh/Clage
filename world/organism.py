@@ -42,6 +42,12 @@ class Organism:
         self.offspring = 0
         self.previous_action: Optional[int] = None
         # per-tick behavioral trace: (action, x, y, food_dx, food_dy, organism_density)
+        # Mixed temporal reference within one entry: `action`, `food_dx`, `food_dy` and
+        # `organism_density` all belong to the observation taken BEFORE the action of
+        # that tick, while `x`, `y` are the position AFTER it was applied. So a consumer
+        # pairing a displacement with an observation must use the observation stored at
+        # the LATER index: `pos_i - pos_{i-1}` was caused by the action at index i, and
+        # the observation preceding that action is the one at index i.
         self.trace: List[Tuple[int, int, int, float, float, float]] = []
 
     # ------------------------------------------------------------- observation
@@ -78,7 +84,13 @@ class Organism:
     # ------------------------------------------------------------- act
 
     def act(self, world: World, config: EnvironmentConfig) -> Optional["Organism"]:
-        """One full tick for this organism: sense, act, metabolize, maybe split."""
+        """One full tick for this organism: sense, act, metabolize, maybe split.
+
+        The trace entry appended here combines the pre-action observation (the ``action``
+        chosen from it, plus ``food_dx``, ``food_dy`` and ``density`` taken from it) with
+        the post-action position (``x``, ``y``), so a consumer pairing a displacement with
+        an observation must use the observation stored at the LATER index.
+        """
         observation = self.observe(world, config)
         outputs = self.network.activate(observation)
         action = max(range(len(outputs)), key=lambda i: outputs[i])

@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,10 +10,13 @@ from diversity.metrics import (
     encounter_rate,
     food_alignment_cosine,
     per_genome_metrics,
+    pooled_transition_entropy_rate,
     population_behavior,
     spatial_coverage,
     transition_entropy_rate,
 )
+from diversity.metrics import _transition_counts  # private: pins the transition total
+from world.config import ACTION_SIZE
 from experiments.config import Condition, ExperimentConfig, load_experiment, resolve_config
 from experiments.run import RECORD_FIELDS, run_trial
 from neat.genome import Genome
@@ -78,6 +82,201 @@ def test_per_genome_metrics_pooling_and_window():
     assert metrics["action_entropy"] == pytest.approx(1.0)
     assert metrics["spatial_coverage"] > 0.0
     assert metrics["encounter_rate"] == pytest.approx(0.25)  # (0.0 + 0.5)/2
+
+
+def test_transition_entropy_respects_organism_boundaries():
+    """transition_entropy must count only action pairs consecutive within one organism.
+
+    Each of the two organisms below emits a perfectly predictable action stream
+    (``[0, 0]`` and ``[1, 1]``), so the only honest conditional-entropy value for the
+    genome they share is exactly ``0.0``.
+
+    Measured pre-fix failure (unfixed code): the pooled assertion fails with
+    ``0.6666666666666666`` instead of ``0.0``. ``per_genome_metrics`` flattens every
+    organism's actions into one stream ``[0, 0, 1, 1]`` before measuring, and
+    ``transition_entropy_rate`` counts ``zip(actions, actions[1:])``, so a ``0 -> 1``
+    transition that never happened is fabricated across the organism boundary. Row 0
+    then splits 1/1 (entropy 1.0, weight 2/3), producing 2/3 of a bit out of nothing.
+
+    The companion single-organism assertion for requirement 2.8 **passes** pre-fix and
+    must keep passing post-fix: with one trace the pooled denominator reduces to
+    ``len(actions) - 1``, which is the existing formula, so the equality is exact.
+    """
+    t1 = trace([(0, 0, 0, 0.0, 0.0, 0.0), (0, 0, 0, 0.0, 0.0, 0.0)])  # actions [0, 0]
+    t2 = trace([(1, 5, 5, 0.0, 0.0, 0.0), (1, 5, 5, 0.0, 0.0, 0.0)])  # actions [1, 1]
+    assert per_genome_metrics([t1, t2], window=0, area=100)["transition_entropy"] == 0.0
+
+    # 2.8 — one organism with >= 2 entries must equal the single-sequence function
+    # exactly (bitwise), not approximately.
+    t = trace([
+        (0, 0, 0, 0.0, 0.0, 0.0),
+        (0, 1, 0, 0.0, 0.0, 0.0),
+        (1, 1, 0, 0.0, 0.0, 0.0),
+        (1, 1, 0, 0.0, 0.0, 0.0),
+        (0, 1, 1, 0.0, 0.0, 0.0),
+        (0, 2, 1, 0.0, 0.0, 0.0),
+        (1, 2, 1, 0.0, 0.0, 0.0),
+        (1, 2, 1, 0.0, 0.0, 0.0),
+    ])
+    assert per_genome_metrics([t], window=0, area=100)["transition_entropy"] == (
+        transition_entropy_rate([a for a, *_ in t])
+    )
+
+
+def test_food_alignment_pairs_displacement_with_preceding_observation():
+    """food_alignment must pair each displacement with the observation before its action.
+
+    Temporal rule: a trace entry holds a PRE-action observation (action, food_dx,
+    food_dy, density) together with a POST-action position (x, y). So for i >= 1 the
+    displacement ``pos_i - pos_{i-1}`` was caused by the action at index ``i``, and the
+    food direction observed immediately before that action is the one at index ``i``,
+    not ``i-1``. Samples are built within a single trace and never across traces.
+
+    Measured pre-fix failures (unfixed code):
+    - 4a returns ``+1.0`` instead of ``-1.0`` — a full sign inversion, with a step
+      taken directly away from food scored as perfect food-seeking.
+    - 4b returns ``0.5`` instead of ``1.0`` — ``food_dirs`` is flattened across
+      organisms while ``deltas`` is not, so the one-index offset accumulates and
+      organism B's step is scored against organism A's food direction.
+    """
+    # 4a — off-by-one inside one trace: step east while food was reported west.
+    t = trace([(0, 0, 0, 1.0, 0.0, 0.0), (0, 1, 0, -1.0, 0.0, 0.0)])
+    assert per_genome_metrics([t], window=0, area=100)["food_alignment"] == pytest.approx(-1.0)
+
+    # 4b — no cross-organism pairing: each organism stepped straight at its own food.
+    t1 = trace([(0, 0, 0, 1.0, 0.0, 0.0), (0, 1, 0, 1.0, 0.0, 0.0)])  # east step, food east
+    t2 = trace([(0, 5, 5, 0.0, 1.0, 0.0), (0, 5, 6, 0.0, 1.0, 0.0)])  # south step, food south
+    assert per_genome_metrics([t1, t2], window=0, area=100)["food_alignment"] == pytest.approx(1.0)
+
+
+# ------------------------------------------------------ pooled transition entropy
+
+
+def test_pooled_transition_entropy_rate_zero_without_transitions():
+    """No within-sequence transition means a zero denominator, hence exactly 0.0."""
+    assert pooled_transition_entropy_rate([]) == 0.0            # no sequences at all
+    assert pooled_transition_entropy_rate([[]]) == 0.0          # one empty sequence
+    assert pooled_transition_entropy_rate([[2]]) == 0.0         # one sequence shorter than 2
+    # several sequences, all shorter than 2: every one is skipped, so the total
+    # transition count is 0 and no fabricated cross-sequence pair rescues it.
+    assert pooled_transition_entropy_rate([[0], [1], [2], [], [3]]) == 0.0
+
+
+def test_pooled_transition_entropy_rate_matches_single_sequence_function():
+    """One sequence must reproduce ``transition_entropy_rate`` bitwise (requirement 2.8)."""
+    actions = [0, 0, 1, 1, 0, 0, 1, 1, 2, 0, 3, 3, 1, 2, 2, 0]
+    assert pooled_transition_entropy_rate([actions]) == transition_entropy_rate(actions)
+    # the pinned reference value stays reachable through the pooled entry point too
+    assert pooled_transition_entropy_rate([[0, 0, 1, 1, 0, 0, 1, 1]]) == (
+        transition_entropy_rate([0, 0, 1, 1, 0, 0, 1, 1])
+    )
+
+
+def test_pooled_transition_entropy_rate_weights_by_contributed_transitions():
+    """Each sequence is weighted by the transitions it actually contributed.
+
+    Pooled count matrix for ``[[0, 0, 0, 1], [1, 1], [0]]``:
+    row 0 -> {0: 2, 1: 1} (3 transitions), row 1 -> {1: 1} (1 transition), and the
+    length-1 sequence contributes nothing. Total = 3 + 1 = 4, which is
+    ``sum(len(s) - 1 for s in sequences if len(s) >= 2)``. Row 1 is deterministic
+    (entropy 0.0), so the rate is row 0's entropy scaled by its 3/4 share.
+    """
+    sequences = [[0, 0, 0, 1], [1, 1], [0]]
+    row0_entropy = -(2 / 3) * math.log2(2 / 3) - (1 / 3) * math.log2(1 / 3)
+    expected = (3 / 4) * row0_entropy
+    assert pooled_transition_entropy_rate(sequences) == pytest.approx(expected)
+
+    # The weighting rule is not either of the two rejected combinations:
+    # flattening (which fabricates the 1 -> 1 and 1 -> 0 boundary pairs)...
+    flattened = transition_entropy_rate([a for s in sequences for a in s])
+    assert pooled_transition_entropy_rate(sequences) != pytest.approx(flattened)
+    # ...nor an unweighted mean of per-sequence rates, which would give the
+    # length-1 and length-2 sequences the same weight as the length-4 one.
+    per_sequence_mean = sum(transition_entropy_rate(s) for s in sequences) / len(sequences)
+    assert pooled_transition_entropy_rate(sequences) != pytest.approx(per_sequence_mean)
+
+
+def test_pooled_transition_total_counts_only_within_trace_pairs():
+    """The transition denominator is exactly the count of legitimate pairs."""
+    sequences = [[0, 0, 1], [1], [2, 2, 2, 2]]
+    counts, total = _transition_counts(sequences, ACTION_SIZE)
+
+    assert total == sum(len(s) - 1 for s in sequences if len(s) >= 2)
+    assert total == 5  # 2 from [0, 0, 1], 0 from [1], 3 from [2, 2, 2, 2]
+    # every counted pair is a within-sequence pair, so the matrix sums to the total
+    assert sum(sum(row) for row in counts) == total
+    assert counts[0][0] == 1 and counts[0][1] == 1 and counts[2][2] == 3
+    # the three boundary pairs that flattening would fabricate are absent:
+    # (1 -> 1) across [0, 0, 1] | [1], (1 -> 2) across [1] | [2, 2, 2, 2]
+    assert counts[1][1] == 0
+    assert counts[1][2] == 0
+
+
+# ------------------------------------------------------ alignment sample accounting
+
+
+def _aligned_samples(traces, window):
+    """Rebuild the alignment sample lists the way ``per_genome_metrics`` does.
+
+    One sample per index ``i >= 1`` of each clipped trace, pairing
+    ``pos_i - pos_{i-1}`` with the food direction recorded at index ``i``, and never
+    pairing across two traces.
+    """
+    deltas = []
+    food_dirs = []
+    for entries in traces:
+        clipped = entries[:window] if window and window > 0 else entries
+        for index in range(1, len(clipped)):
+            _, x, y, fx, fy, _ = clipped[index]
+            prev_x, prev_y = clipped[index - 1][1], clipped[index - 1][2]
+            deltas.append((x - prev_x, y - prev_y))
+            food_dirs.append((fx, fy))
+    return deltas, food_dirs
+
+
+def test_alignment_sample_count_drops_exactly_one_per_trace():
+    """Sample count is ``sum(max(0, len(clipped) - 1))`` — one dropped per trace.
+
+    Each trace's first recorded action is dropped because the position before it was
+    never recorded, so its displacement is unrecoverable; consequently ``food_dirs[0]``
+    of every trace is unused while the final observed food direction is used.
+
+    Per-trace sample cosines below are distinct known values (+1.0, 0.0, +0.6), so the
+    reported mean pins the exact sample set: an extra pair, a missing pair, or a pair
+    built from two different traces would all move it.
+    """
+    t1 = trace([
+        (0, 0, 0, 1.0, 0.0, 0.0),   # first recorded action: dropped, food dir unused
+        (0, 1, 0, 1.0, 0.0, 0.0),   # step east, food east   -> cos +1.0
+        (0, 1, 1, 1.0, 0.0, 0.0),   # step south, food east  -> cos  0.0
+    ])
+    t2 = trace([
+        (0, 5, 5, 0.0, 1.0, 0.0),   # first recorded action: dropped, food dir unused
+        (0, 6, 5, 0.6, 0.8, 0.0),   # step east, food east-south -> cos +0.6
+    ])
+    t3 = trace([(0, 9, 9, 1.0, 0.0, 0.0)])  # single entry -> no sample at all
+    traces = [t1, t2, t3]
+
+    deltas, food_dirs = _aligned_samples(traces, window=0)
+    expected_count = sum(max(0, len(t) - 1) for t in traces)
+    assert expected_count == 3
+    assert len(deltas) == expected_count
+    assert len(food_dirs) == expected_count
+    # no sample mixes indices from two traces: every delta stays inside its trace
+    assert deltas == [(1, 0), (0, 1), (1, 0)]
+
+    metrics = per_genome_metrics(traces, window=0, area=100)
+    assert metrics["food_alignment"] == food_alignment_cosine(deltas, food_dirs)
+    assert metrics["food_alignment"] == pytest.approx((1.0 + 0.0 + 0.6) / 3)
+
+    # clipping first, then dropping one per clipped trace
+    windowed_deltas, windowed_food_dirs = _aligned_samples(traces, window=2)
+    assert len(windowed_deltas) == sum(max(0, len(t[:2]) - 1) for t in traces) == 2
+    windowed = per_genome_metrics(traces, window=2, area=100)
+    assert windowed["food_alignment"] == food_alignment_cosine(
+        windowed_deltas, windowed_food_dirs
+    )
+    assert windowed["food_alignment"] == pytest.approx((1.0 + 0.6) / 2)
 
 
 # ------------------------------------------------------------------ population
