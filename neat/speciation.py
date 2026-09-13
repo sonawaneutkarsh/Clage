@@ -41,6 +41,28 @@ class SpeciationConfig:
     small_genome_threshold: int = 20
     stagnation_threshold: int = 15
 
+    def __post_init__(self) -> None:
+        """Reject a stagnation threshold that no species can ever survive.
+
+        At ``0`` the ``stagnation >= threshold`` test in ``prune_stagnant`` is
+        always true, so every species goes extinct every generation: allocation
+        returns nothing, generation 1 leaves an empty population, and no later
+        generation ever speciates, allocates or crosses over. Narrow by design —
+        ``compatibility_threshold``, the distance coefficients and
+        ``small_genome_threshold`` are NOT validated, because a degenerate value
+        there is still size-preserving and no defect was reproduced for them.
+        """
+        rule = "an int >= 1"
+        value = self.stagnation_threshold
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(
+                f"SpeciationConfig.stagnation_threshold must be {rule}, got {value!r}"
+            )
+        if value < 1:
+            raise ValueError(
+                f"SpeciationConfig.stagnation_threshold must be {rule}, got {value!r}"
+            )
+
 
 @dataclass
 class Species:
@@ -219,12 +241,20 @@ class Speciation:
 
         Largest-remainder rounding so counts sum exactly to ``population_size``.
         If every species has zero adjusted fitness, fall back to a uniform split.
+
+        Weights are clipped at zero first: negative adjusted fitness confers no
+        selective advantage, the same rule ``Population._select_parent`` already
+        applies to raw fitness. Without the clip a mixed-sign generation with a
+        positive total produces budgets above ``population_size`` for one species
+        and negative budgets for the rest. Clipping is the identity whenever every
+        sum is already nonnegative, so the common case is untouched.
         """
         n_species = len(self.species)
         if n_species == 0:
             return {}
 
-        total = sum(s.adjusted_fitness_sum for s in self.species)
+        weights = {s.id: max(s.adjusted_fitness_sum, 0.0) for s in self.species}
+        total = sum(weights.values())
         if total <= 0.0:
             base, rem = divmod(population_size, n_species)
             return {
@@ -232,7 +262,7 @@ class Speciation:
                 for i, s in enumerate(self.species)
             }
 
-        raw = {s.id: s.adjusted_fitness_sum / total * population_size for s in self.species}
+        raw = {s.id: weights[s.id] / total * population_size for s in self.species}
         allocation = {sid: int(count) for sid, count in raw.items()}
         remaining = population_size - sum(allocation.values())
 

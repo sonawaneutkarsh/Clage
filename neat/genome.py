@@ -22,7 +22,11 @@ __all__ = [
     "Genome",
 ]
 
-# The Clage experiment's fixed interface to the world: 10 sensors, 4 actions.
+# Engine convenience defaults for ``Genome.minimal()``: 10 input ids and 4
+# output ids, reserving 0..9 for inputs so output ids stay stable. They are a
+# generic starting shape only and assert nothing about any particular
+# environment's observation vector or action set — an environment that cares
+# owns its own interface contract and passes explicit ids.
 DEFAULT_INPUT_IDS: tuple[int, ...] = tuple(range(10))
 DEFAULT_OUTPUT_IDS: tuple[int, ...] = tuple(range(10, 14))
 

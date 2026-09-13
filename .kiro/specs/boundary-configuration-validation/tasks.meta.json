@@ -1,0 +1,39 @@
+{
+  "pbtResults": {
+    "3. Write the Area 3 exploration test": {
+      "status": "passed",
+      "failingExample": "21 failed, all with \"Failed: DID NOT RAISE ValueError/TypeError\" — confirming NO EnvironmentConfig field is validated at construction on unfixed code. Counterexamples: width=0, width=-3, height=0, ticks=-5, ticks=0, density_radius=0, density_radius=-2, max_energy=0.0, initial_energy=-1.0, metabolism=-1.0, repro_fraction=1.5, repro_fraction=-0.5, initial_food=-10, food_target=-10, food_regrowth_per_tick=-3, seed_stride=0 (expected ValueError); width='twenty', width=20.5, width=20.0, width=True (expected TypeError); dataclasses.replace(EnvironmentConfig(), density_radius=0) (expected ValueError).",
+      "lastRunTimestamp": 1789314142909
+    },
+    "4. Write the Area 3 preservation test (BEFORE implementing the fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1789314165604
+    },
+    "5.3 Re-run the SAME Area 3 exploration test": {
+      "status": "passed",
+      "lastRunTimestamp": 1789314253944
+    },
+    "5.4 Re-run the Area 3 preservation test and the full baseline": {
+      "status": "passed",
+      "lastRunTimestamp": 1789314263531
+    },
+    "15. Write the Area 4 exploration test": {
+      "status": "passed",
+      "failingExample": "Area 4 exploration test FAILED on unfixed code as required (9 failures), confirming the bug:\n(a) duplicate names ('food_low' twice): DID NOT RAISE; condition('food_low').value == 20 (second unreachable), 3 conditions loaded.\n(b) zero controls: DID NOT RAISE; [c.name for c in conditions if c.is_control] == [].\n(c) two controls: DID NOT RAISE; controls == ['control', 'control_two'].\n(d) run_experiment(..., ['typo-name']): DID NOT RAISE; returned {}.\n(d-cli) main(--conditions typo-name): DID NOT RAISE; printed \"experiment ok: 0 condition(s)\", exit 0.\n(e) nested extends: KeyError: 'base' at experiments/config.py:152.\n(f) \"seeds\": [] with extends: DID NOT RAISE; seeds silently became parent's [11, 12].\n(f2) \"seeds\": [] without extends: DID NOT RAISE; seeds silently became [0, 1, 2, 3, 4].\n(g) missing 'conditions': KeyError: 'conditions' at experiments/config.py:159.",
+      "lastRunTimestamp": 1789315207210
+    },
+    "16. Write the Area 4 preservation test (BEFORE implementing the fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1789315426586
+    },
+    "17.4 Re-run the SAME Area 4 exploration test": {
+      "status": "passed",
+      "lastRunTimestamp": 1789315500278
+    },
+    "17.5 Re-run the Area 4 preservation test and the full baseline": {
+      "status": "passed",
+      "lastRunTimestamp": 1789315500359
+    }
+  },
+  "executionHistory": {}
+}

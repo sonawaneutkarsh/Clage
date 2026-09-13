@@ -27,6 +27,7 @@ mutated.
 
 from __future__ import annotations
 
+import math
 import random
 from typing import Callable, Dict, List, Optional
 
@@ -40,6 +41,22 @@ __all__ = ["Population"]
 
 FitnessFn = Callable[[Genome, int], float]
 EvaluatorFn = Callable[[List[Genome], int], None]
+
+
+def _require_int_at_least(owner: str, field: str, value: object, lowest: int) -> None:
+    """Reject a value that cannot serve as a count for ``owner.field``.
+
+    ``TypeError`` when the type cannot support the field at all — ``bool`` and
+    ``float`` are refused even though ``True`` and ``6.0`` would survive the
+    comparison, because both flow straight into ``range()`` and into slice
+    arithmetic where only a true ``int`` has defined behavior. ``ValueError``
+    when the type is right but the value is out of range.
+    """
+    rule = f"an int >= {lowest}"
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"{owner}.{field} must be {rule}, got {value!r}")
+    if value < lowest:
+        raise ValueError(f"{owner}.{field} must be {rule}, got {value!r}")
 
 
 def _structure_signature(genome: Genome) -> tuple:
@@ -73,6 +90,26 @@ class Population:
     ) -> None:
         if fitness_fn is None and evaluator is None:
             raise ValueError("provide either fitness_fn (per-genome) or evaluator (batch)")
+
+        # Reject engine configuration that cannot produce a valid run, in
+        # argument declaration order so the field named first is deterministic.
+        # Scope is deliberately narrow: only values measured to break the
+        # constant-population-size invariant, to make a run impossible, or to
+        # silently substitute something the caller never supplied. Values that
+        # merely saturate a probability (``crossover_rate`` and the
+        # ``MutationConfig`` fields outside ``[0, 1]``) are left alone.
+        if population_size is not None:
+            _require_int_at_least("Population", "population_size", population_size, 1)
+        _require_int_at_least("Population", "elitism", elitism, 0)
+        if initial_population is not None and len(initial_population) == 0:
+            # An empty list is not "no argument": it would set population_size to
+            # 0, leave the population empty every generation and never establish
+            # a champion.
+            raise ValueError(
+                "Population.initial_population must be a non-empty list of genomes, "
+                f"got {initial_population!r}"
+            )
+
         self.fitness_fn = fitness_fn
         self.evaluator = evaluator
         self.elitism = elitism
@@ -83,11 +120,18 @@ class Population:
 
         self.speciation = Speciation(speciation_config or SpeciationConfig())
 
+        # ``is None``, not ``or``: an explicitly supplied size is honoured as
+        # given (and already validated above) rather than treated as absent.
+        # The documented defaults are unchanged — 100 when the argument is
+        # omitted, ``len(initial_population)`` when it is omitted alongside an
+        # initial population.
         if initial_population is not None:
             self.population = [g.copy() for g in initial_population]
-            self.population_size = population_size or len(self.population)
+            self.population_size = (
+                len(self.population) if population_size is None else population_size
+            )
         else:
-            self.population_size = population_size or 100
+            self.population_size = 100 if population_size is None else population_size
             self.population = [
                 Genome.minimal(input_ids=input_ids, output_ids=output_ids)
                 for _ in range(self.population_size)
@@ -199,6 +243,25 @@ class Population:
         else:
             for genome in self.population:
                 genome.fitness = self.fitness_fn(genome, self.generation)
+
+        # Reject non-finite fitness right here, before any of it can reach
+        # best-genome tracking, recorded statistics, speciation or offspring
+        # allocation. A NaN loses every ``max()`` comparison in silence, and an
+        # infinity turns the allocation ratio into a NaN whose error message
+        # reports a value the caller never supplied. Only *genome* values are
+        # inspected: engine state such as ``best_fitness`` starts at
+        # ``float("-inf")`` on purpose, as a sentinel the first generation beats.
+        for index, genome in enumerate(self.population):
+            if not math.isfinite(genome.fitness):
+                if math.isnan(genome.fitness):
+                    kind = "nan"
+                elif genome.fitness > 0.0:
+                    kind = "inf"
+                else:
+                    kind = "-inf"
+                raise ValueError(
+                    f"non-finite fitness at population index {index}: {kind}"
+                )
 
         # Record the *evaluated* best/mean. Post-reproduction, offspring carry
         # stale fitness (0.0 after crossover), so stats must not be computed

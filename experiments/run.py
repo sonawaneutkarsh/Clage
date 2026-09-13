@@ -200,6 +200,14 @@ def run_experiment(
 ) -> Dict[str, Path]:
     """Run a whole experiment file; returns {condition_name: result_dir}."""
     experiment = load_experiment(config_path)
+    if conditions:
+        defined = {c.name for c in experiment.conditions}
+        unknown = [name for name in conditions if name not in defined]
+        if unknown:
+            raise ValueError(
+                f"{config_path}: unknown condition(s) {unknown}; "
+                f"available: {sorted(defined)}"
+            )
     result_dirs = {}
     names = conditions or [c.name for c in experiment.conditions]
     for condition in experiment.conditions:

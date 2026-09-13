@@ -193,6 +193,84 @@ def test_all_zero_fitness_falls_back_to_uniform():
     assert sum(allocation.values()) == 5
 
 
+# -------------------------------------------------- mixed-sign allocation
+
+
+def speciation_with_sums(*sums):
+    """A ``Speciation`` whose species (ids 1..n) carry the given adjusted sums."""
+    spe = Speciation()
+    spe.species = []
+    for index, total in enumerate(sums, start=1):
+        species = Species(id=index, representative=group_a())
+        species.adjusted_fitness_sum = total
+        spe.species.append(species)
+    return spe
+
+
+def test_mixed_sign_allocation_is_nonnegative_and_sums_to_target():
+    """Mixed-sign adjusted sums with a positive total must not hand out negative
+    budgets, nor a budget larger than the whole target.
+
+    PRE-FIX (HEAD ``ea8a9c2``): sums ``[3.0, -1.0]`` with ``n=10`` return
+    ``{1: 15, 2: -5}`` and sums ``[10.0, -4.0, -4.0]`` with ``n=10`` return
+    ``{1: 50, 2: -20, 3: -20}``.
+
+    **Validates: Requirements 1.29, 2.29**
+    """
+    two = speciation_with_sums(3.0, -1.0).allocate_offspring(10)
+    assert all(count >= 0 for count in two.values())
+    assert all(count <= 10 for count in two.values())
+    assert sum(two.values()) == 10
+
+    three = speciation_with_sums(10.0, -4.0, -4.0).allocate_offspring(10)
+    assert all(count >= 0 for count in three.values())
+    assert all(count <= 10 for count in three.values())
+    assert sum(three.values()) == 10
+
+
+def test_mixed_sign_allocation_clips_negative_weights_to_zero():
+    """The worked example: sums ``[5.0, -2.0]`` with ``n=12`` clip to weights
+    ``[5.0, 0.0]``, so the whole budget goes to species 1.
+
+    PRE-FIX: ``{1: 20, 2: -8}``.
+
+    **Validates: Requirements 1.29, 2.29**
+    """
+    spe = speciation_with_sums(5.0, -2.0)
+    allocation = spe.allocate_offspring(12)
+    assert allocation == {1: 12, 2: 0}
+    assert [species.offspring for species in spe.species] == [12, 0]
+
+
+def test_nonnegative_sum_allocation_is_bitwise_unchanged():
+    """Clipping is the identity when every adjusted sum is already nonnegative.
+
+    These are the values measured on HEAD ``ea8a9c2`` before any production change,
+    so proportional ratios, ``int()`` truncation and largest-remainder rounding must
+    all reproduce them exactly.
+
+    **Validates: Requirements 3.10**
+    """
+    assert speciation_with_sums(3.0, 1.0).allocate_offspring(8) == {1: 6, 2: 2}
+    assert speciation_with_sums(1.0, 1.0, 1.0).allocate_offspring(10) == {1: 4, 2: 3, 3: 3}
+    assert speciation_with_sums(2.0, 0.0).allocate_offspring(6) == {1: 6, 2: 0}
+
+
+def test_nonpositive_total_keeps_the_uniform_fallback():
+    """All-zero and all-negative totals both take the documented uniform split.
+
+    Clipping turns every negative weight into ``0.0``, so the total is ``0.0 <= 0.0``
+    — the same branch today's ``-4.0 <= 0`` already reaches. Negative fitness stays
+    legal.
+
+    **Validates: Requirements 3.9**
+    """
+    assert speciation_with_sums(0.0, 0.0).allocate_offspring(6) == {1: 3, 2: 3}
+    assert speciation_with_sums(-3.0, -1.0).allocate_offspring(6) == {1: 3, 2: 3}
+    assert speciation_with_sums(-1.0, -1.0, -1.0).allocate_offspring(10) == {1: 4, 2: 3, 3: 3}
+    assert sum(speciation_with_sums(-2.0, -8.0).allocate_offspring(7).values()) == 7
+
+
 # ------------------------------------------------------------------ extinction
 
 
