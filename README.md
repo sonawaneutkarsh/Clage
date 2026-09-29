@@ -1,6 +1,6 @@
 # Clage
 
-A from-scratch NEAT engine dropped into a 2D world where tiny organisms learn to move, eat, survive, and reproduce. Underneath the chaos are controlled benchmarks, seeded experiments, behavioral metrics, and 198 tests keeping everything honest.
+A from-scratch NEAT engine dropped into a 2D world where tiny organisms learn to move, eat, survive, and reproduce. Underneath the chaos are controlled benchmarks, seeded experiments, behavioral metrics, and 300 tests keeping everything honest.
 
 ```
 neat/          custom NEAT engine: genome, phenotype, innovation ledger, mutation,
