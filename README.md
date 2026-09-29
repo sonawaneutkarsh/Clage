@@ -21,7 +21,7 @@ benchmarks/    NEAT validation suite (OR / AND / XOR / sin)
 python3 -m venv .venv
 .venv/bin/pip install -e .          # installs matplotlib
 .venv/bin/pip install pytest
-.venv/bin/python -m pytest tests/   # 198 tests
+.venv/bin/python -m pytest tests/   # 300 tests
 ```
 
 ## Quick usage
@@ -159,5 +159,5 @@ for org in organisms:
 
 ## Layout
 
-- `tests/` — 198 tests (`pytest`).
+- `tests/` — 300 tests (`pytest`).
 - `results/` — raw experiment output (gitignored).
