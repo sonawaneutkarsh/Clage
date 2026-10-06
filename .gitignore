@@ -7,3 +7,10 @@ progress/
 clage.egg-info/
 benchmarks/plots/
 .DS_Store
+.kiro/
+htmlcov/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
