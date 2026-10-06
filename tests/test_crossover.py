@@ -1,6 +1,5 @@
 import random
 
-import pytest
 
 from neat.crossover import crossover
 from neat.genome import ConnectionGene, Genome, NodeGene, NodeType

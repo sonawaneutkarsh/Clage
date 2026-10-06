@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List
+from typing import List, Optional
 
 import json
 import matplotlib
@@ -86,7 +86,7 @@ def write_report(
     report_path: Path,
     *,
     control: str = "control",
-    plot_dir: Path = None,
+    plot_dir: Optional[Path] = None,
 ) -> None:
     """Write a markdown report summarizing all conditions vs the control."""
     exp_dir = Path(exp_dir)

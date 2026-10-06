@@ -14,7 +14,7 @@ from typing import List, Optional, Tuple
 from neat.genome import Genome
 from neat.phenotype import Network
 
-from .config import ACTION_SIZE, OBSERVATION_SIZE, Action, Direction, EnvironmentConfig
+from .config import Action, Direction, EnvironmentConfig
 from .grid import FOOD, World
 
 __all__ = ["Organism"]

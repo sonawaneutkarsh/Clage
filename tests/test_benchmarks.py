@@ -1,4 +1,3 @@
-import pytest
 
 from benchmarks.diagnose import check_fitness_design, check_network_execution, _hand_solution
 from benchmarks.problems import AND, OR, PROBLEMS, SIN, XOR, Problem

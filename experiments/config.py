@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import copy
 import json
-from dataclasses import asdict, dataclass, field, replace
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -248,7 +248,7 @@ def resolve_config(
 ) -> ResolvedConfig:
     """Build the resolved config for a condition, applying the single change."""
     base = copy.deepcopy(experiment.base)
-    if not condition.is_control:
+    if condition.parameter is not None:  # i.e. not the control
         for path in PARAMETERS[condition.parameter]:
             _set_path(base, path, condition.value)
 

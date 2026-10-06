@@ -117,7 +117,11 @@ def run_trial(
     for generation in range(1, resolved.generations + 1):
         population.run(1)
         recorder = state.get("recorder")
-        if recorder is not None and generation == record_generation + 1:
+        if (
+            recorder is not None
+            and record_generation is not None
+            and generation == record_generation + 1
+        ):
             recorder.context.update(
                 {
                     "species_count": population.statistics[-1]["species_count"],

@@ -9,7 +9,7 @@ execution, no evolution, no speciation. Those are separate layers.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import IntEnum, auto
 from typing import Dict, Iterable, List, Optional
 

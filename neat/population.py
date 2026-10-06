@@ -241,6 +241,7 @@ class Population:
             # the whole population at once and stamps genome.fitness.
             self.evaluator(self.population, self.generation)
         else:
+            assert self.fitness_fn is not None  # enforced in __init__
             for genome in self.population:
                 genome.fitness = self.fitness_fn(genome, self.generation)
 

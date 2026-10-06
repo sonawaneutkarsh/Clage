@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from random import Random
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from .genome import ConnectionGene, Genome, NodeGene, NodeType
 from .innovation import InnovationDB

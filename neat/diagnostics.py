@@ -10,7 +10,7 @@ Run: ``python -m neat.diagnostics``
 from __future__ import annotations
 
 import random
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .genome import Genome
 from .innovation import InnovationDB
@@ -66,7 +66,7 @@ def species_report(
     generations: int,
     *,
     seed: int = 0,
-    fitness_fn: Optional[Callable[[Genome, random.Random], float]] = None,
+    fitness_fn: Optional[Callable[[Genome, Any], float]] = None,
     config: Optional[SpeciationConfig] = None,
     input_ids: Optional[Iterable[int]] = None,
     output_ids: Optional[Iterable[int]] = None,
@@ -77,7 +77,7 @@ def species_report(
     offspring, then build the next population by mutating each species'
     fittest member once per allocated child (mutation-only reproduction).
     """
-    fitness_fn = fitness_fn or xor_fitness
+    score: Callable[[Genome, Any], float] = fitness_fn or xor_fitness
     rng = random.Random(seed)
     db = InnovationDB()
     spe = Speciation(config)
@@ -90,7 +90,7 @@ def species_report(
     report: List[Dict] = []
     for generation in range(generations):
         for genome in population:
-            genome.fitness = fitness_fn(genome, rng)
+            genome.fitness = score(genome, rng)
 
         spe.speciate(population)
         spe.share_fitness()

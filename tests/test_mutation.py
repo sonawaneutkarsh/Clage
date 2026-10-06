@@ -1,6 +1,5 @@
 import random
 
-import pytest
 
 from neat.genome import ConnectionGene, Genome, NodeGene, NodeType
 from neat.innovation import InnovationDB

@@ -12,7 +12,7 @@ __all__ = ["aggregate", "trial_table", "print_trial_table", "markdown_report"]
 
 def aggregate(results: List[TrialResult]) -> Dict:
     solved = [r for r in results if r.solved]
-    gens = [r.generations_to_solve for r in solved]
+    gens = [r.generations_to_solve for r in solved if r.generations_to_solve is not None]
     return {
         "trials": len(results),
         "solved": len(solved),

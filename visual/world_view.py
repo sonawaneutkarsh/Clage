@@ -58,7 +58,7 @@ def draw_frame(
         colors = [_GENOME_COLORS(o["genome"] % 20) for o in organisms]
         ax.scatter(xs, ys, s=110, c=colors, edgecolors="k", linewidths=0.4, zorder=3)
 
-        segments: List[Tuple[float, float]] = []
+        segments: List[Tuple[Optional[float], Optional[float]]] = []
         for organism in organisms:
             dx, dy = FACING_VECTORS[organism["facing"]]
             segments.append((organism["x"], organism["y"]))
@@ -122,17 +122,17 @@ class WorldViewer:
         self.fig.canvas.mpl_connect("button_press_event", self._on_click)
 
     def _build_controls(self) -> None:
-        slider_ax = self.fig.add_axes([0.18, 0.05, 0.55, 0.03])
+        slider_ax = self.fig.add_axes((0.18, 0.05, 0.55, 0.03))
         self.slider = Slider(
             slider_ax, "tick", 0, len(self.ticks) - 1, valinit=0, valstep=1
         )
         self.slider.on_changed(self._on_slider)
 
-        play_ax = self.fig.add_axes([0.78, 0.045, 0.07, 0.04])
+        play_ax = self.fig.add_axes((0.78, 0.045, 0.07, 0.04))
         self.play_button = Button(play_ax, "play")
         self.play_button.on_clicked(self._on_play)
 
-        step_ax = self.fig.add_axes([0.86, 0.045, 0.07, 0.04])
+        step_ax = self.fig.add_axes((0.86, 0.045, 0.07, 0.04))
         self.step_button = Button(step_ax, "step")
         self.step_button.on_clicked(self._on_step)
 
@@ -187,7 +187,8 @@ class WorldViewer:
                     genome,
                     title=f"organism {organism_id} (genome {organism['genome']})",
                 )
-                fig.canvas.manager.show()
+                if fig.canvas.manager is not None:
+                    fig.canvas.manager.show()
                 return
 
     def show(self) -> None:

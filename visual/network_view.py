@@ -6,7 +6,7 @@ edges. No evolutionary logic; it reads only the recorded genome dict.
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
 
@@ -41,7 +41,6 @@ def draw_genome(ax, genome: Dict[str, Any]) -> None:
     for node_id, node in nodes.items():
         x, y = positions[node_id]
         ax.scatter([x], [y], s=900, color=_node_color(node["type"]), zorder=3)
-        label = f"{node_id}\n{node['type'][0]} b={node['bias']:.2f}"
         ax.text(x, y, f"{node_id}", ha="center", va="center", fontsize=8, color="white", zorder=4)
         ax.text(x, y - 0.14, f"b={node['bias']:.2f}", ha="center", va="center", fontsize=6, zorder=4)
 
@@ -52,7 +51,7 @@ def draw_genome(ax, genome: Dict[str, Any]) -> None:
     ax.axis("off")
 
 
-def genome_figure(genome: Dict[str, Any], title: str = None) -> plt.Figure:
+def genome_figure(genome: Dict[str, Any], title: Optional[str] = None) -> plt.Figure:
     """Return a standalone figure of the genome's network."""
     fig, ax = plt.subplots(figsize=(7, 4), constrained_layout=True)
     draw_genome(ax, genome)

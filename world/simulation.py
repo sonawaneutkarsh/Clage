@@ -5,14 +5,14 @@ Their evolved networks decide every action; the world applies the consequences
 (movement, eating, metabolism, death, reproduction, food regeneration). After
 the trial the world is thrown away and fitness is stamped onto each genome.
 
-Deterministic: the world's rng is seeded from ``config.seed_base +
-generation * config.seed_stride``.
+Deterministic: the world's rng is seeded from
+``config.world_rng_seed(generation)``, a hash of ``(seed_base, generation)``.
 """
 
 from __future__ import annotations
 
 import random
-from typing import Callable, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from neat.genome import Genome
 
@@ -20,6 +20,9 @@ from .config import ACTION_SIZE, OBSERVATION_SIZE, EnvironmentConfig
 from .fitness import fitness
 from .grid import World
 from .organism import Organism
+
+if TYPE_CHECKING:  # avoid a runtime import cycle with recorder -> simulation
+    from .recorder import GenerationRecorder
 
 __all__ = ["run_generation", "make_evaluator"]
 
@@ -100,6 +103,7 @@ def run_generation(
     organisms: List[Organism] = []
     for genome in population:
         cell = world.random_empty_cell()
+        assert cell is not None  # guaranteed by _check_capacity above
         organism = Organism(genome, *cell, config)
         world.place_organism(organism)
         organisms.append(organism)

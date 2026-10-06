@@ -16,7 +16,7 @@ mutation depends only on the injected ``random.Random``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 __all__ = ["NodeInnovation", "InnovationDB"]
 
@@ -115,7 +115,7 @@ class InnovationDB:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, object]) -> "InnovationDB":
+    def from_dict(cls, data: Dict[str, Any]) -> "InnovationDB":
         db = cls()
         for raw_key, innov in data["connection_innovations"].items():
             a, b = raw_key.split("->")

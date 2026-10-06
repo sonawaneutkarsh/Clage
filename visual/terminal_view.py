@@ -241,7 +241,6 @@ def render_frame(
     color: bool = False,
 ) -> str:
     """Render the boxed layout for one tick as a string."""
-    config = recording["config"]
     tick = recording["ticks"][tick_index]
 
     left = world_grid_lines(recording, tick_index, color)

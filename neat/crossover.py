@@ -48,11 +48,10 @@ def crossover(
 
     if parent_a.fitness > parent_b.fitness:
         fitter: Optional[Genome] = parent_a
-        other: Optional[Genome] = parent_b
     elif parent_b.fitness > parent_a.fitness:
-        fitter, other = parent_b, parent_a
+        fitter = parent_b
     else:
-        fitter, other = None, None  # equal fitness -> 50/50 policy
+        fitter = None  # equal fitness -> 50/50 policy
 
     innovations = sorted(set(a_by_innov) | set(b_by_innov))
     child_connections: List[ConnectionGene] = []
@@ -84,6 +83,7 @@ def crossover(
                 continue
             conn = ca.copy()
         else:
+            assert cb is not None  # innovation came from the union of both parents
             if fitter is not None:
                 keep = fitter is parent_b
             else:

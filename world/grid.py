@@ -8,9 +8,12 @@ Food regenerates toward a target count. All randomness flows through an injected
 from __future__ import annotations
 
 import random
-from typing import Iterator, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple
 
 from .config import EnvironmentConfig
+
+if TYPE_CHECKING:  # organism.py imports this module
+    from .organism import Organism
 
 __all__ = ["World"]
 
@@ -57,13 +60,13 @@ class World:
             return True
         return False
 
-    def place_organism(self, organism: object) -> bool:
+    def place_organism(self, organism: Organism) -> bool:
         if not self.is_empty(organism.x, organism.y):
             return False
         self.cells[organism.y][organism.x] = organism
         return True
 
-    def move_organism(self, organism: object, new_x: int, new_y: int) -> bool:
+    def move_organism(self, organism: Organism, new_x: int, new_y: int) -> bool:
         if not self.is_empty(new_x, new_y):
             return False
         self.cells[organism.y][organism.x] = None
@@ -71,7 +74,7 @@ class World:
         self.cells[new_y][new_x] = organism
         return True
 
-    def remove_organism(self, organism: object) -> None:
+    def remove_organism(self, organism: Organism) -> None:
         if self.cells[organism.y][organism.x] is organism:
             self.cells[organism.y][organism.x] = None
 

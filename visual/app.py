@@ -50,7 +50,7 @@ def _cmd_tui(args: argparse.Namespace) -> None:
 def _cmd_analytics(args: argparse.Namespace) -> None:
     _set_backend(args.export is not None)
     from .analytics import analytics_figure, export_analytics
-    from .data import METRICS, condition_names
+    from .data import condition_names
 
     metrics = None
     if args.metrics:

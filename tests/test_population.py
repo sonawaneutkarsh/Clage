@@ -4,7 +4,7 @@ import math
 import pytest
 
 import neat.population
-from neat.genome import ConnectionGene, Genome, NodeGene, NodeType
+from neat.genome import ConnectionGene, Genome
 from neat.mutation import MutationConfig
 from neat.population import Population
 from neat.speciation import SpeciationConfig

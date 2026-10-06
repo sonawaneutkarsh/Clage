@@ -1,4 +1,3 @@
-import pytest
 
 from neat.innovation import DEFAULT_NEXT_INNOVATION, DEFAULT_NEXT_NODE_ID, InnovationDB
 

@@ -17,7 +17,7 @@ from diversity.metrics import (
 )
 from diversity.metrics import _transition_counts  # private: pins the transition total
 from world.config import ACTION_SIZE
-from experiments.config import Condition, ExperimentConfig, load_experiment, resolve_config
+from experiments.config import Condition, ExperimentConfig, resolve_config
 from experiments.run import RECORD_FIELDS, run_trial
 from neat.genome import Genome
 
