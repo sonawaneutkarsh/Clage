@@ -53,7 +53,7 @@ class Organism:
     # ------------------------------------------------------------- observation
 
     def observe(self, world: World, config: EnvironmentConfig) -> List[float]:
-        """The 9-number observation vector (see progress/world.md for rationale)."""
+        """The 9-number observation vector."""
         radius = max(world.width, world.height) / 2.0
 
         nearest = world.nearest_food(self.x, self.y)

@@ -1,12 +1,16 @@
 import random
 
-
 from neat.crossover import crossover
 from neat.genome import ConnectionGene, Genome, NodeGene, NodeType
 
 
 class FixedRng(random.Random):
     """A seeded Random whose .random() returns a scripted sequence (exact tests)."""
+
+    def __new__(cls, values):
+        # Python 3.10's Random.__new__ tries to seed from the constructor
+        # argument (a list here, which is unhashable); seed from nothing instead.
+        return super().__new__(cls)
 
     def __init__(self, values):
         super().__init__()

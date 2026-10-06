@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from neat.population import Population
@@ -148,6 +149,11 @@ def main(argv: Optional[List[str]] = None) -> None:
     parser.add_argument("--generations", type=int, default=DEFAULT_MAX_GENERATIONS)
     parser.add_argument("--seed-base", type=int, default=DEFAULT_SEED_BASE)
     parser.add_argument("--no-plot", action="store_true", help="skip generating plots")
+    parser.add_argument(
+        "--report",
+        default="results/benchmarks/validation_report.md",
+        help="markdown report path (parent directories are created)",
+    )
     args = parser.parse_args(argv)
 
     from .diagnose import diagnose_failures
@@ -181,8 +187,10 @@ def main(argv: Optional[List[str]] = None) -> None:
     if failures:
         diagnoses = diagnose_failures(results_by_problem, failures)
 
-    with open("progress/validation_report.md", "w") as handle:
-        handle.write(markdown_report(results_by_problem, diagnoses))
+    report_path = Path(args.report)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(markdown_report(results_by_problem, diagnoses))
+    print(f"\nreport written to {report_path}")
 
 
 if __name__ == "__main__":

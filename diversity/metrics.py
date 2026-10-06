@@ -19,7 +19,7 @@ All metrics are DESCRIPTIVE statistics of observable actions and
 positions. None of them measure cooperation, competition, aggression, or
 avoidance: Clage defines no cooperative/competitive interaction, and the
 observation space has no directional organism sensor, so such strategies are
-not expressible. See ``progress/diversity.md`` for the full justification.
+not expressible.
 """
 
 from __future__ import annotations
