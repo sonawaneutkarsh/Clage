@@ -3,10 +3,11 @@ import { colorFor, layoutNetwork, matchedFrame, metricsCSV } from './math.js';
 const $ = identity => document.getElementById(identity);
 const actions = ['MOVE', 'TURN LEFT', 'TURN RIGHT', 'EAT'];
 const observations = ['Food Δx', 'Food Δy', 'Food density', 'Body density', 'Energy', 'Wall x', 'Wall y', 'Prev MOVE', 'Prev EAT'];
-let state = {}, genomes = {}, bundle = null, comparison = null, selected = null;
+let state = {}, genomes = {}, evolutionLineage = {}, bundle = null, comparison = null, selected = null;
 let replayIndex = 0, replayPlaying = false, grid = false, following = false, view = 'ecosystem';
 let trail = [], localFrames = [], lastSequence = -1, lastGeneration = -1;
 let socket, reconnectTimer, chartDirty = true, events = [], previousBodies = new Map();
+let drawingMilliseconds = 0, drawingSamples = 0;
 const camera = { zoom: 1, x: 0, y: 0 };
 const graphCamera = { x: 0, y: 0, zoom: 1 };
 const canvas = $('world'), context = canvas.getContext('2d');
@@ -82,8 +83,16 @@ function currentSpecies() { return bundle ? bundle.species || {} : state.species
 function framesForChart() { return bundle ? bundle.frames.slice(0, replayIndex + 1) : localFrames; }
 
 function acceptState(next) {
+  if (next.heartbeat) return;
+  const runChanged = next.run_id !== state.run_id;
+  const historyChanged = (next.history?.length || 0) !== (state.history?.length || 0);
   state = next;
+  if (runChanged) {
+    localFrames = []; lastSequence = -1; lastGeneration = -1;
+    if (!bundle) { selected = null; following = false; trail = []; previousBodies.clear(); events = []; }
+  }
   if (next.error) toast(next.error);
+  if (historyChanged && !bundle) safely(loadGenomes);
   if (!bundle && next.frame) {
     const frame = next.frame;
     const changed = frame.sequence !== lastSequence;
@@ -121,18 +130,21 @@ function processEvents(frame) {
 }
 
 async function loadGenomes() {
-  genomes = await api('/api/genomes');
+  [genomes, evolutionLineage] = await Promise.all([api('/api/genomes'), api('/api/lineage')]);
   populateGenomeChoices();
+  updateInspector();
   drawNetworks();
+  if (view === 'evolution') drawHistory();
 }
 
 function connect() {
   clearTimeout(reconnectTimer);
   socket = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/api/stream`);
-  socket.onopen = () => $('connection').textContent = 'Local engine connected';
+  socket.onopen = () => { $('connection').textContent = 'Local engine connected'; $('connection-dot').style.background = 'var(--accent)'; };
   socket.onmessage = message => acceptState(JSON.parse(message.data));
   socket.onclose = () => {
     $('connection').textContent = 'Disconnected · reconnecting';
+    $('connection-dot').style.background = 'var(--red)';
     reconnectTimer = setTimeout(connect, 1500);
   };
   socket.onerror = () => $('connection').textContent = 'Connection unavailable';
@@ -152,8 +164,12 @@ function updateUI(refreshInspectors = true) {
   $('world-seed').textContent = `SEED ${config.seed} · ${config.initialization.toUpperCase()}`;
   const playing = bundle ? replayPlaying : !state.paused;
   $('play').textContent = playing ? 'Ⅱ Pause' : (bundle ? '▶ Play replay' : state.complete ? '✓ Complete' : '▶ Resume');
-  $('play').disabled = !bundle && state.complete;
+  $('play').disabled = !bundle && (state.complete || Boolean(state.error));
+  $('step').disabled = !bundle && (state.complete || Boolean(state.error));
   $('mode').textContent = bundle ? `REPLAY · ${playing ? 'PLAYING' : 'PAUSED'}` : state.complete ? 'LIVE · COMPLETE' : `LIVE · ${state.paused ? 'PAUSED' : 'RUNNING'}`;
+  if (!bundle && state.error) $('mode').textContent = 'LIVE · ERROR';
+  $('engine-error').hidden = !state.error || Boolean(bundle);
+  $('engine-error').textContent = state.error ? `${state.error} Reset the run to recover.` : '';
   $('sim-rate').textContent = bundle ? 'Recorded playback · engine unchanged' : `${state.paused ? 0 : state.achieved_tps || 0} engine ticks/s`;
   $('recording-window').textContent = bundle ? `${bundle.frames.length} frames · ${bundle.dropped_frames || 0} dropped` : `${state.recording?.frames || 0} recorded · ${state.recording?.dropped || 0} dropped`;
   $('speed-label').textContent = `${$('speed').value} ${bundle ? 'frames/s' : 'ticks/s'}`;
@@ -189,13 +205,16 @@ function updateInspector() {
   host.append(title);
   const data = element('dl', { class: 'body-data' });
   const final = frame.tick === currentConfig().ticks;
+  const genome = currentGenomes()[body.genome];
   const values = [
     ['Genome', body.genome], ['Species', currentSpecies()[body.genome] ?? 'Not evaluated'],
     ['Position', `${body.x}, ${body.y}`], ['Facing', ['North', 'East', 'South', 'West'][body.facing]],
     ['Energy', body.energy.toFixed(4)], ['Age', `${body.age} ticks`],
     ['Last action', actions[body.action] || 'Not acted'], ['Consumed', body.food_eaten],
     ['Offspring', body.offspring], ['Parent body', body.parent ?? 'Founder'],
-    ['Body score', `${body.fitness.toFixed(2)} · ${final ? 'final' : 'provisional'}`], ['Generation', frame.generation]
+    ['Body score', `${body.fitness.toFixed(2)} · ${final ? 'final' : 'provisional'}`], ['Generation', frame.generation],
+    ['Genome final score', genome?.fitness == null ? 'Not evaluated' : genome.fitness.toFixed(3)],
+    ['Evaluation phase', final ? 'Completed world' : 'World in progress']
   ];
   for (const [label, value] of values) {
     const pair = element('div'); pair.append(element('dt', {}, label), element('dd', {}, value)); data.append(pair);
@@ -204,9 +223,8 @@ function updateInspector() {
   const bar = element('div', { class: 'energy-bar' }), fill = element('span');
   fill.style.width = `${Math.max(0, Math.min(1, body.energy)) * 100}%`;
   bar.append(fill); host.append(bar);
-  const genome = currentGenomes()[body.genome];
   renderNetwork($('mini-network'), genome, body.inference, 420, 330, false);
-  $('decision-label').textContent = body.action === null ? 'No action has been taken yet.' : `Selected: ${actions[body.action]} · observations from before body age ${body.age}`;
+  $('decision-label').textContent = body.action === null ? 'No action has been taken yet.' : `Selected: ${actions[body.action]} · pre-action observations at world tick ${body.inference?.world_tick ?? 'not recorded'}`;
 }
 
 function resizeCanvas(target) {
@@ -364,7 +382,10 @@ function renderNetwork(target, genome, inference, width, height, detailed = true
       fill: 'none', stroke: edge.weight >= 0 ? '#87cdb0' : '#dd9d76', 'stroke-width': Math.min(4, .5 + Math.abs(edge.weight)),
       opacity: edge.enabled ? .46 : .2, 'stroke-dasharray': edge.enabled ? '' : '4 4', class: 'edge' });
     link.append(svgElement('title', {}, `${edge.in} → ${edge.out} · weight ${edge.weight.toFixed(4)} · innovation ${edge.innovation} · ${edge.enabled ? 'enabled' : 'disabled'}`));
-    link.addEventListener('click', () => $('network-detail').textContent = JSON.stringify({ kind: 'Connection', ...edge }, null, 2));
+    link.addEventListener('click', () => $('network-detail').textContent = JSON.stringify({ kind: 'Connection', ...edge,
+      source_activation: inference?.values?.[edge.in] ?? 'Not recorded',
+      inference_tick: inference?.world_tick ?? 'Not recorded',
+      weighted_contribution: inference ? (edge.enabled ? inference.values[edge.in] * edge.weight : 0) : 'Not recorded' }, null, 2));
     group.append(link);
   }
   const inputs = genome.nodes.filter(node => node.type === 'INPUT').sort((first, second) => first.id - second.id);
@@ -374,7 +395,7 @@ function renderNetwork(target, genome, inference, width, height, detailed = true
     const color = value === undefined ? '#233940' : value >= 0 ? `hsl(151 35% ${23 + Math.min(1, value) * 48}%)` : `hsl(25 45% ${23 + Math.min(1, -value) * 44}%)`;
     const chosen = node.type === 'OUTPUT' && inference && outputs.indexOf(node) === inference.outputs.indexOf(Math.max(...inference.outputs));
     const circle = svgElement('circle', { cx: position.x, cy: position.y, r: detailed ? 14 : 9, fill: color, stroke: chosen ? '#d5ffe9' : '#8fb4b8', 'stroke-width': chosen ? 3 : 1, class: 'node' });
-    const detail = { kind: 'Node', ...node, activation: value ?? 'Not recorded' };
+    const detail = { kind: 'Node', ...node, activation: value ?? 'Not recorded', inference_tick: inference?.world_tick ?? 'Not recorded' };
     circle.append(svgElement('title', {}, JSON.stringify(detail)));
     circle.addEventListener('click', () => $('network-detail').textContent = JSON.stringify(detail, null, 2));
     group.append(circle);
@@ -509,9 +530,12 @@ distributionToolbar.append(distributionSelect);
 distributionPanel.append(distributionToolbar, element('canvas', { id: 'distribution-chart', 'aria-label': 'State distribution histogram' }), element('p', { id: 'distribution-note', class: 'fine-print' }));
 document.querySelector('.analytics').after(distributionPanel);
 distributionSelect.onchange = () => chartDirty = true;
+const engineError = element('p', { id: 'engine-error', class: 'form-error', role: 'alert', hidden: '' });
+document.querySelector('.page-heading').after(engineError);
 
 const decisionLabel = element('p', { id: 'decision-label', class: 'fine-print' });
 $('mini-network').after(decisionLabel);
+document.querySelector('.research-intro p').after(element('p', { class: 'fine-print' }, 'Sensory limitation: the forager uses body-facing information absent from the original neural inputs. It is a privileged reference, not an equal-information learning baseline.'));
 
 function makeTable(headers, rows) {
   const table = element('table'), head = element('thead'), title = element('tr');
@@ -536,11 +560,21 @@ function drawHistory() {
     const rows = history.map(row => {
       const inspect = element('button', { class: 'text-button' }, `Inspect ${row.champion} ↗`);
       inspect.onclick = () => { $('genome-choice').value = row.champion; setView('neural'); drawNetworks(); };
+      const ancestry = element('button', { class: 'text-button' }, ' · Ancestry ↗');
+      ancestry.onclick = () => { $('evolution-genome').value = row.champion; drawEvolutionTree(); };
+      const navigation = element('span'); navigation.append(inspect, ancestry);
       return [row.world_generation, row.best_fitness.toFixed(3), row.mean_fitness.toFixed(3), row.species_count,
-        row.mean_nodes.toFixed(1), row.mean_connections.toFixed(1), JSON.stringify(row.species), inspect];
+        row.mean_nodes.toFixed(1), row.mean_connections.toFixed(1), JSON.stringify(row.species), navigation];
     });
     $('history').append(makeTable(['World G', 'Best score', 'Mean score', 'Species', 'Mean nodes', 'Mean genes', 'Species sizes', 'Champion'], rows));
   }
+  const selector = $('evolution-genome'), previous = selector.value;
+  selector.replaceChildren();
+  const records = bundle ? (bundle.version === 2 ? bundle.lineage : {}) : evolutionLineage;
+  for (const key of Object.keys(records || {})) selector.append(element('option', { value: key }, `Genome ${key}`));
+  if (records?.[previous]) selector.value = previous;
+  else if (history.length && records?.[history.at(-1).champion]) selector.value = history.at(-1).champion;
+  drawEvolutionTree();
   const frame = currentFrame(), lineage = $('lineage'); lineage.replaceChildren();
   if (!frame || selected === null) { lineage.append(element('p', { class: 'muted' }, 'Select an organism in the ecosystem to trace its ancestors and children.')); return; }
   const bodies = new Map(frame.organisms.map(body => [body.id, body])), ancestry = [], visited = new Set();
@@ -561,10 +595,61 @@ function drawHistory() {
   }
 }
 
+const evolutionPanel = element('section', { class: 'lineage-panel' });
+const evolutionToolbar = element('div', { class: 'panel-toolbar' });
+evolutionToolbar.append(element('span', {}, 'EVOLUTIONARY GENOME ANCESTRY · V1'));
+const evolutionChoice = element('select', { id: 'evolution-genome', 'aria-label': 'Evolutionary genome focus' });
+evolutionToolbar.append(evolutionChoice);
+evolutionPanel.append(evolutionToolbar, svgElement('svg', { id: 'evolution-tree', viewBox: '0 0 900 430', 'aria-label': 'Evolutionary genome ancestry tree' }),
+  element('pre', { id: 'evolution-detail' }, 'Select a recorded genotype to inspect its reproduction and net mutation deltas.'),
+  element('p', { class: 'fine-print' }, 'Up to four ancestral edges. Repeated boxes can refer to the same genotype. Parent selections include crossover, elite clones and champion rescues. Net mutation deltas compare the pre/post-mutation child; they are not a log of every operator invocation. This is separate from body splits within a world.'));
+$('history').after(evolutionPanel);
+evolutionChoice.onchange = drawEvolutionTree;
+
+function drawEvolutionTree() {
+  const records = bundle ? (bundle.version === 2 ? bundle.lineage : {}) : evolutionLineage;
+  const focus = $('evolution-genome').value, graph = $('evolution-tree'); graph.replaceChildren();
+  if (!records?.[focus]) {
+    graph.append(svgElement('text', { x: 30, y: 70, fill: '#809aa5', 'font-size': 15 }, 'Evolutionary provenance is unavailable in this recording.'));
+    return;
+  }
+  $('evolution-detail').textContent = JSON.stringify({ genome: focus, ...records[focus] }, null, 2);
+  const levels = [[{ key: focus, next: null }]];
+  for (let depth = 1; depth <= 4; depth++) {
+    const entries = [];
+    for (const child of levels[depth - 1]) {
+      for (const parent of records[child.key]?.parents || []) entries.push({ key: parent, next: child });
+    }
+    if (!entries.length) break;
+    levels.push(entries);
+  }
+  const height = Math.max(220, Math.max(...levels.map(level => level.length)) * 34 + 80);
+  graph.setAttribute('viewBox', `0 0 900 ${height}`);
+  levels.forEach((level, depth) => level.forEach((entry, index) => {
+    entry.x = 450 + (levels.length - 1) * 90 - depth * 180; entry.y = 40 + (index + .5) / level.length * (height - 80);
+  }));
+  for (const level of levels) for (const entry of level) {
+    if (entry.next) graph.append(svgElement('path', { d: `M${entry.x + 53},${entry.y} C${entry.x + 95},${entry.y} ${entry.next.x - 95},${entry.next.y} ${entry.next.x - 53},${entry.next.y}`,
+      fill: 'none', stroke: '#45675f', 'stroke-width': 1.5 }));
+  }
+  for (const level of levels) for (const entry of level) {
+    const group = svgElement('g', { class: 'genome-ancestor', tabindex: 0, role: 'button', 'aria-label': `Inspect genotype ${entry.key ?? 'unknown'}` });
+    group.append(svgElement('rect', { x: entry.x - 53, y: entry.y - 14, width: 106, height: 28, rx: 5, fill: '#193029', stroke: '#52786a' }),
+      svgElement('text', { x: entry.x, y: entry.y + 4, 'text-anchor': 'middle', fill: '#a6eccb', 'font-size': 11 }, entry.key ?? 'Unknown parent'),
+      svgElement('title', {}, records[entry.key]?.kind || 'Unknown'));
+    const inspect = () => {
+      if (records[entry.key]) { $('evolution-genome').value = entry.key; drawEvolutionTree(); }
+    };
+    group.onclick = inspect;
+    group.onkeydown = event => { if (event.key === 'Enter') inspect(); };
+    graph.append(group);
+  }
+}
+
 const viewText = {
   ecosystem: ['LIVE ECOSYSTEM', 'Life, in motion', 'Observe a world of evolving neural organisms.'],
   neural: ['NEURAL ATLAS', 'Inside the decision', 'Topology, weights and the last actual inference.'],
-  evolution: ['EVOLUTION EXPLORER', 'Across generations', 'Evaluated outcomes and within-world body ancestry.'],
+  evolution: ['EVOLUTION EXPLORER', 'Across generations', 'Evaluated outcomes, genome ancestry and within-world body lineage.'],
   research: ['RESEARCH WORKBENCH', 'Ask better questions', 'Prespecified baselines, held-out worlds and portable evidence.']
 };
 function setView(next) {
@@ -632,10 +717,10 @@ $('review').onclick = () => safely(async () => {
   if (!data.frames.length) throw new Error('Recording is disabled or no frames available');
   enterReplay(data);
 });
-$('live').onclick = () => {
+  $('live').onclick = () => {
   bundle = null; comparison = null; replayPlaying = false; selected = null; trail = [];
   $('comparison-panel').hidden = true; $('clear-compare').hidden = true;
-  chartDirty = true; populateGenomeChoices(); updateUI();
+  chartDirty = true; populateGenomeChoices(); acceptState(state); updateUI();
 };
 $('scrub').oninput = () => {
   replayIndex = Number($('scrub').value); replayPlaying = false; trail = []; selected = null;
@@ -692,13 +777,14 @@ $('save').onclick = () => safely(async () => {
   if (bundle) { download(JSON.stringify(bundle), 'clage-replay.json'); toast('Imported replay downloaded; live artifact was not changed.'); return; }
   const result = await api('/api/artifacts', {}); toast(`Saved .studio-runs/${result.filename}`); await loadArtifacts();
 });
-$('champion-export').onclick = () => {
+$('champion-export').onclick = () => safely(async () => {
+  if (!bundle) { download(JSON.stringify(await api('/api/champion'), null, 2), 'clage-champion.json'); return; }
   const history = bundle ? bundle.history : state.history || [];
   if (!history.length) return toast('Complete an evaluated generation first');
   const best = history.reduce((first, second) => first.best_fitness >= second.best_fitness ? first : second);
   download(JSON.stringify({ schema: 'clage-champion', version: 1, config: currentConfig(), generation: best.world_generation,
     genome: currentGenomes()[best.champion], metadata: bundle?.metadata || { source: 'current live run' } }, null, 2), 'clage-champion.json');
-};
+});
 
 async function loadArtifacts() {
   const records = await api('/api/artifacts'); $('artifacts').replaceChildren();
@@ -795,6 +881,8 @@ function animate(now) {
   if (now - frameClock > 1000) {
     fps = countFrames * 1000 / (now - frameClock); countFrames = 0; frameClock = now;
     $('render-rate').textContent = `${fps.toFixed(0)} render FPS`;
+    canvas.dataset.drawMilliseconds = (drawingMilliseconds / Math.max(1, drawingSamples)).toFixed(3);
+    drawingMilliseconds = 0; drawingSamples = 0;
   }
   if (bundle && replayPlaying && now - playbackClock >= 1000 / Number($('speed').value)) {
     playbackClock = now;
@@ -803,11 +891,14 @@ function animate(now) {
     chartDirty = true; updateUI();
   }
   if (view === 'ecosystem') {
+    const started = performance.now();
     drawWorld(canvas, currentFrame(), currentConfig());
+    drawingMilliseconds += performance.now() - started; drawingSamples++;
     if (comparison && currentFrame()) {
       const matched = matchedFrame(comparison.frames, currentFrame());
       drawWorld($('comparison'), matched, comparison.config, false);
-      if (!matched) $('comparison-label').textContent = 'SECOND RUN · NO MATCHING RECORDED GENERATION/TICK';
+      const config = comparison.config;
+      $('comparison-label').textContent = matched ? `SECOND RUN · SEED ${config.seed} · FOOD ${config.food} · ${config.width}×${config.height} · ACTUAL G${matched.generation}:T${matched.tick}` : 'SECOND RUN · NO EARLIER RECORDED FRAME IN THIS GENERATION';
     }
     if (chartDirty) { drawChart(); drawDistribution(); chartDirty = false; }
   }

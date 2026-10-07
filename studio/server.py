@@ -21,6 +21,16 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .core import Manager, RunConfig, evaluate_policies, validate_replay
 
+MAX_REPLAY_BYTES = 24 * 1024 * 1024
+
+
+def reject_nonfinite(value):
+    raise ValueError(f"Nonfinite JSON value: {value}")
+
+
+def decode_replay(raw):
+    return validate_replay(json.loads(raw, parse_constant=reject_nonfinite))
+
 
 class Command(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -39,9 +49,11 @@ def create_app(manager=None, worker=True, artifact_dir=None):
         yield
         manager.close()
 
-    app = FastAPI(title="Clage Studio", version="1.0-slice", lifespan=lifespan)
+    app = FastAPI(title="Clage Studio", version="1.0-slice", lifespan=lifespan,
+                  docs_url=None, redoc_url=None)
     app.state.manager = manager
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
+    hosts = ["localhost", "127.0.0.1"] + (["testserver"] if not worker else [])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
 
     def valid_origin(origin, host):
         return origin is None or origin in {f"http://{host}", f"https://{host}"}
@@ -75,13 +87,45 @@ def create_app(manager=None, worker=True, artifact_dir=None):
         with manager.lock:
             return copy.deepcopy(manager.experiment.genomes) if manager.experiment else {}
 
+    @app.get("/api/lineage")
+    def lineage():
+        with manager.lock:
+            return copy.deepcopy(manager.experiment.lineage) if manager.experiment else {}
+
+    @app.get("/api/champion")
+    def champion():
+        with manager.lock:
+            experiment = manager.experiment
+            if not experiment or not experiment.history:
+                raise HTTPException(409, "Complete an evaluated generation first")
+            best = max(experiment.history, key=lambda row: row["best_fitness"])
+            return copy.deepcopy({"schema": "clage-champion", "version": 1,
+                                  "config": experiment.config.model_dump(),
+                                  "generation": best["world_generation"],
+                                  "genome": experiment.genomes[best["champion"]],
+                                  "metadata": experiment.metadata})
+
     def get_bundle():
         with manager.lock:
             if not manager.experiment:
                 raise HTTPException(409, "No active experiment")
             if not manager.experiment.frames:
                 raise HTTPException(409, "Recording is disabled; enable it in a new run to save/export replay")
-            return copy.deepcopy(manager.experiment.bundle())
+            bundle = copy.deepcopy(manager.experiment.bundle())
+        trimmed = 0
+        while len(json.dumps(bundle, separators=(",", ":"), allow_nan=False)) > MAX_REPLAY_BYTES:
+            if len(bundle["frames"]) <= 1:
+                raise HTTPException(413, "Replay frame/genome table exceeds 24 MiB; use a smaller population")
+            drop = max(1, len(bundle["frames"]) // 8)
+            bundle["frames"] = bundle["frames"][drop:]
+            bundle["dropped_frames"] += drop
+            trimmed += drop
+            retained = {body["genome"] for frame in bundle["frames"] for body in frame["organisms"]}
+            retained.update(row["champion"] for row in bundle["history"])
+            bundle["genomes"] = {key: genome for key, genome in bundle["genomes"].items() if key in retained}
+            bundle["species"] = {key: species for key, species in bundle["species"].items() if key in retained}
+            bundle["metadata"]["portable_export_trimmed_frames"] = trimmed
+        return bundle
 
     @app.get("/api/replay")
     def replay():
@@ -98,13 +142,12 @@ def create_app(manager=None, worker=True, artifact_dir=None):
         chunks, length = [], 0
         async for chunk in request.stream():
             length += len(chunk)
-            if length > 24 * 1024 * 1024:
+            if length > MAX_REPLAY_BYTES:
                 raise HTTPException(413, "Replay upload exceeds 24 MiB")
             chunks.append(chunk)
         try:
-            data = json.loads(b"".join(chunks), parse_constant=lambda value: (_ for _ in ()).throw(ValueError("Nonfinite JSON")))
-            return await asyncio.to_thread(validate_replay, data)
-        except (ValueError, TypeError, KeyError) as error:
+            return await asyncio.to_thread(decode_replay, b"".join(chunks))
+        except (ValueError, TypeError, KeyError, RecursionError, OverflowError) as error:
             raise HTTPException(422, str(error)) from error
 
     @app.post("/api/artifacts")
@@ -143,6 +186,8 @@ def create_app(manager=None, worker=True, artifact_dir=None):
                 if not manager.experiment:
                     raise HTTPException(409, "Start an experiment first")
                 config = manager.experiment.config.model_copy(deep=True)
+                if config.width * config.height > 4096:
+                    raise HTTPException(409, "Interactive evaluation is limited to 4,096 cells; export replay and use python -m studio.evaluate for larger runs")
                 champion = manager.experiment.population.best_genome
                 champion = champion.copy() if champion else None
             try:
@@ -158,10 +203,23 @@ def create_app(manager=None, worker=True, artifact_dir=None):
             await websocket.close(code=1008)
             return
         await websocket.accept()
+        signature = None
+        idle = 0
         try:
             while True:
-                state = await asyncio.to_thread(manager.snapshot)
-                await websocket.send_json(state)
+                def encode_snapshot():
+                    current_signature, snapshot = manager.stream_snapshot(signature)
+                    return current_signature, json.dumps(snapshot, separators=(",", ":"), allow_nan=False) if snapshot is not None else None
+
+                signature, state = await asyncio.to_thread(encode_snapshot)
+                if state is not None:
+                    await websocket.send_text(state)
+                    idle = 0
+                else:
+                    idle += 1
+                    if idle >= 20:
+                        await websocket.send_json({"heartbeat": True})
+                        idle = 0
                 await asyncio.sleep(0.1)
         except (WebSocketDisconnect, RuntimeError):
             return

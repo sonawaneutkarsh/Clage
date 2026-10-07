@@ -37,6 +37,7 @@ class InferenceRecord(Record):
     inputs: list[float] = Field(min_length=9, max_length=9)
     outputs: list[float] = Field(min_length=4, max_length=4)
     values: dict[str | int, float]
+    world_tick: int | None = Field(default=None, ge=1)
 
 
 class BodyRecord(Record):
@@ -88,3 +89,36 @@ class HistoryRecord(Record):
     mean_nodes: float
     mean_connections: float
     species: dict[str | int | None, int]
+
+
+class WeightDelta(Record):
+    innovation: int = Field(ge=0)
+    before: float
+    after: float
+
+
+class EnabledDelta(Record):
+    innovation: int = Field(ge=0)
+    before: bool
+    after: bool
+
+
+class BiasDelta(Record):
+    node: int = Field(ge=0)
+    before: float
+    after: float
+
+
+class MutationDeltas(Record):
+    added_nodes: list[int] = Field(max_length=512)
+    added_innovations: list[int] = Field(max_length=4096)
+    removed_innovations: list[int] = Field(max_length=4096)
+    weight_changes: list[WeightDelta] = Field(max_length=4096)
+    enabled_changes: list[EnabledDelta] = Field(max_length=4096)
+    bias_changes: list[BiasDelta] = Field(max_length=512)
+
+
+class EvolutionRecord(Record):
+    parents: list[str | None] = Field(max_length=2)
+    kind: Literal['founder', 'elite', 'clone', 'crossover', 'champion_copy', 'champion_rescue']
+    deltas: MutationDeltas | None

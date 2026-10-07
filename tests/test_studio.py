@@ -5,6 +5,11 @@ import random
 import time
 
 import pytest
+
+pytest.importorskip("fastapi")
+pytest.importorskip("httpx")
+pytest.importorskip("pydantic", minversion="2.7")
+
 from fastapi.testclient import TestClient
 
 from neat.genome import ConnectionGene, Genome
@@ -12,6 +17,8 @@ from neat.phenotype import Network
 from studio.core import Experiment, Manager, RunConfig, evaluate_policies, validate_replay
 from studio.server import create_app
 from studio.reproduce import reproduce
+from studio.evaluate import evaluate_bundle
+from studio.validate import validate_run
 from world.config import EnvironmentConfig
 from world.grid import World
 from world.organism import Organism
@@ -21,6 +28,13 @@ from world.simulation import WorldSession
 
 def tiny(**overrides):
     return RunConfig(population=3, width=8, height=8, food=10, ticks=8, generations=2, **overrides)
+
+
+def test_complete_run_validation_reports_actual_recorded_reproduction():
+    result = validate_run(tiny())
+    assert result['completed_generations'] == 2
+    assert result['world_ticks'] == 16
+    assert result['reproduction']['recorded_frames_verified'] == result['retained_frames']
 
 
 def test_inference_instrumentation_is_exact_and_readonly():
@@ -231,3 +245,109 @@ def test_heldout_rejects_training_seed_overlap():
     config = tiny().model_copy(update={'seed': 10001})
     with pytest.raises(ValueError, match='overlap'):
         evaluate_policies(config, None)
+
+
+def test_idle_stream_suppresses_duplicate_snapshots_and_reset_is_new_run():
+    manager = Manager()
+    manager.create(tiny())
+    signature, first = manager.stream_snapshot(None)
+    assert first['run_id'] == 1
+    assert manager.stream_snapshot(signature)[1] is None
+    manager.command('reset')
+    _, reset = manager.stream_snapshot(signature)
+    assert reset['run_id'] == 2
+    assert reset['frame']['sequence'] == first['frame']['sequence']
+
+
+def test_archived_champion_evaluation_and_inference_forgery_rejection():
+    experiment = Experiment(tiny())
+    while experiment.advance():
+        pass
+    bundle = json.loads(json.dumps(experiment.bundle()))
+    evaluated = evaluate_bundle(bundle)
+    assert len(evaluated['results']) == 20
+    assert evaluated['training_provenance'] == bundle['metadata']
+    corrupt = copy.deepcopy(bundle)
+    corrupt['frames'][1]['organisms'][0]['inference']['values']['0'] += .1
+    with pytest.raises(ValueError, match='activations'):
+        validate_replay(corrupt)
+
+
+def test_safety_budget_pauses_without_advancing_or_fabricating_final_fitness(monkeypatch):
+    monkeypatch.setattr('studio.core.BODY_BUDGET', 5)
+    manager = Manager()
+    manager.create(tiny())
+    initial = manager.snapshot()['frame']
+    with pytest.raises(ValueError, match='safety budget'):
+        manager.command('step')
+    assert manager.snapshot()['frame'] == initial
+    assert manager.snapshot()['paused']
+    assert not manager.experiment.history
+    with pytest.raises(ValueError, match='Reset'):
+        manager.command('resume')
+    manager.command('reset')
+    assert manager.error is None
+
+
+def test_champion_export_contains_evaluated_score_and_provenance(tmp_path):
+    with TestClient(create_app(worker=False, artifact_dir=tmp_path)) as client:
+        client.post('/api/runs', json=tiny().model_dump())
+        assert client.get('/api/champion').status_code == 409
+        for _ in range(8):
+            client.post('/api/control', json={'action': 'step'})
+        champion = client.get('/api/champion').json()
+        assert champion['genome']['fitness'] is not None
+        assert champion['generation'] == 0
+        assert champion['metadata']['checkpoint'] is False
+        assert 'resolved_world' in champion['metadata']
+        assert len(evaluate_bundle(champion)['results']) == 20
+
+
+def test_replay_rejects_nonfinite_and_deep_json_and_disabled_export(tmp_path):
+    with TestClient(create_app(worker=False, artifact_dir=tmp_path)) as client:
+        assert client.post('/api/replay/validate', content='{"value": NaN}').status_code == 422
+        assert client.post('/api/replay/validate', content='[' * 2000 + '0' + ']' * 2000).status_code == 422
+        client.post('/api/runs', json=tiny(record=False).model_dump())
+        assert client.get('/api/export').status_code == 409
+        assert client.post('/api/artifacts').status_code == 409
+
+
+def test_portable_export_budget_trims_only_recorded_prefix(monkeypatch, tmp_path):
+    manager = Manager()
+    manager.create(tiny())
+    for _ in range(7):
+        manager.command('step')
+    original = manager.experiment.bundle()
+    one = copy.deepcopy(original)
+    one['frames'] = one['frames'][-1:]
+    limit = len(json.dumps(one, separators=(',', ':'))) + 500
+    monkeypatch.setattr('studio.server.MAX_REPLAY_BYTES', limit)
+    with TestClient(create_app(manager, worker=False, artifact_dir=tmp_path)) as client:
+        replay = client.get('/api/replay').json()
+        assert 0 < len(replay['frames']) < len(original['frames'])
+        assert replay['frames'][-1] == json.loads(json.dumps(original['frames'][-1]))
+        assert replay['metadata']['portable_export_trimmed_frames'] > 0
+        assert manager.experiment.dropped == original['dropped_frames']
+        validate_replay(replay)
+
+
+def test_versioned_evolutionary_lineage_is_distinct_from_body_parentage():
+    experiment = Experiment(tiny())
+    while experiment.advance():
+        pass
+    bundle = json.loads(json.dumps(experiment.bundle()))
+    assert bundle['version'] == 2
+    assert len(bundle['lineage']) == 6
+    assert all(record['kind'] == 'founder' for key, record in bundle['lineage'].items() if key.startswith('0:'))
+    assert all(record['parents'] and all(parent.startswith('0:') for parent in record['parents'])
+               for key, record in bundle['lineage'].items() if key.startswith('1:'))
+    validate_replay(bundle)
+    corrupt = copy.deepcopy(bundle)
+    corrupt['lineage']['1:0']['parents'] = ['1:0']
+    with pytest.raises(ValueError):
+        validate_replay(corrupt)
+    legacy = copy.deepcopy(bundle)
+    legacy['version'] = 1
+    del legacy['lineage']
+    del legacy['lineage_schema']
+    validate_replay(legacy)

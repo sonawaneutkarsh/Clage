@@ -4,34 +4,39 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import random
 import subprocess
 import threading
 import time
 from collections import Counter, deque
+from dataclasses import asdict
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Literal
+from weakref import WeakKeyDictionary
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from neat.genome import ConnectionGene
 from neat.mutation import MutationConfig
 from neat.population import Population
+from neat.phenotype import Network
 from neat.speciation import SpeciationConfig
 from world.config import Direction, EnvironmentConfig
 from world.fitness import fitness
 from world.recorder import _serialize_genome
 from world.simulation import WorldSession
 
-from .contracts import FrameRecord, GenomeRecord, HistoryRecord
+from .contracts import EvolutionRecord, FrameRecord, GenomeRecord, HistoryRecord
 
 SCHEMA = "clage-studio-replay"
-VERSION = 1
+VERSION = 2
 OBSERVATIONS = ["Food Δx", "Food Δy", "Food density", "Body density", "Energy",
                 "Wall proximity x", "Wall proximity y", "Previous MOVE", "Previous EAT"]
 ACTIONS = ["MOVE", "TURN LEFT", "TURN RIGHT", "EAT"]
 RECORDING_BYTES = 16 * 1024 * 1024
+BODY_BUDGET = 50000
 
 
 class RunConfig(BaseModel):
@@ -83,7 +88,7 @@ def provenance():
     except PackageNotFoundError:
         engine_version = "source-checkout"
     return {"engine_version": engine_version, "commit": commit, "dirty": dirty,
-            "studio_contract": "1.0-slice-v1", "created": datetime.now(timezone.utc).isoformat(),
+            "studio_contract": "1.0-slice-v2", "created": datetime.now(timezone.utc).isoformat(),
             "fitness_definition": "world-fitness-v1: max body (3*food+.01*age+.5*offspring)",
             "observations": OBSERVATIONS, "actions": ACTIONS, "checkpoint": False}
 
@@ -95,10 +100,16 @@ class Experiment:
         self.population = Population(
             None, evaluator=self._evaluate, population_size=config.population,
             input_ids=list(range(9)), output_ids=[10, 11, 12, 13], seed=config.seed,
+            record_reproduction=True,
             mutation_config=MutationConfig(weight_prob=config.weight_mutation,
                                            add_node_prob=config.add_node,
                                            add_connection_prob=config.add_connection),
             speciation_config=SpeciationConfig(compatibility_threshold=config.compatibility))
+        self.metadata.update({"resolved_world": asdict(config.world()),
+                              "resolved_mutation": asdict(self.population.mutation_config),
+                              "resolved_speciation": asdict(self.population.speciation.config),
+                              "elitism": self.population.elitism,
+                              "crossover_rate": self.population.crossover_rate})
         if config.initialization == "dense-random-v1":
             for genome in self.population.population:
                 for source in genome.inputs:
@@ -113,6 +124,8 @@ class Experiment:
         self.history: list[dict[str, Any]] = []
         self.genomes: dict[str, Any] = {}
         self.species: dict[str, int] = {}
+        self.lineage: dict[str, Any] = {}
+        self._genome_keys: WeakKeyDictionary = WeakKeyDictionary()
         self.complete = False
         self.sequence = 0
         self.dropped = 0
@@ -129,6 +142,13 @@ class Experiment:
             data["fitness"] = None
             data["key"] = self.genome_ids[genome]
             self.genomes[data["key"]] = data
+            record = self.population.reproduction_records.get(genome)
+            self.lineage[data["key"]] = {
+                "parents": [self._genome_keys.get(parent) for parent in record["parents"]] if record else [],
+                "kind": record["kind"] if record else "founder",
+                "deltas": record["deltas"] if record else None,
+            }
+            self._genome_keys[genome] = data["key"]
         for organism in self.session.organisms:
             organism.capture_inference = True
         self._capture()
@@ -144,6 +164,9 @@ class Experiment:
         if self.session.tick >= self.config.ticks:
             self._new_generation()
             return True
+        possible_bodies = len(self.session.organisms) + sum(body.alive for body in self.session.organisms)
+        if possible_bodies > BODY_BUDGET:
+            raise ValueError("Studio's 50,000-body safety budget would be exceeded; reset or use offline world execution. No final generation fitness was evaluated.")
         self.session.step()
         self._capture()
         if self.session.tick == self.config.ticks:
@@ -215,13 +238,33 @@ class Experiment:
                 "genomes": {key: value for key, value in self.genomes.items() if key in retained},
                 "species": {key: value for key, value in self.species.items() if key in retained},
                 "history": self.history, "frames": list(self.frames),
+                "lineage_schema": "clage-evolution-lineage-v1", "lineage": self.lineage,
                 "dropped_frames": self.dropped, "complete": self.complete}
 
 
 def validate_replay(data):
-    if not isinstance(data, dict) or data.get("schema") != SCHEMA or type(data.get("version")) is not int or data.get("version") != VERSION:
+    if not isinstance(data, dict) or data.get("schema") != SCHEMA or type(data.get("version")) is not int or data.get("version") not in (1, VERSION):
         raise ValueError("Unsupported Studio replay schema/version; legacy recordings use the old viewer")
     config = RunConfig.model_validate(data.get("config"))
+    if data["version"] == 2:
+        lineage = data.get("lineage")
+        if data.get("lineage_schema") != "clage-evolution-lineage-v1" or not isinstance(lineage, dict) or len(lineage) > 10000:
+            raise ValueError("Invalid evolutionary lineage schema/table")
+        for key, record in lineage.items():
+            EvolutionRecord.model_validate(record)
+            try:
+                generation, identity = (int(part) for part in key.split(":"))
+            except (ValueError, AttributeError):
+                raise ValueError("Invalid lineage genome key") from None
+            if not 0 <= generation < config.generations or not 0 <= identity < config.population:
+                raise ValueError("Lineage genome key out of run bounds")
+            if not isinstance(record, dict) or record.get("kind") not in {"founder", "elite", "clone", "crossover", "champion_copy", "champion_rescue"}:
+                raise ValueError("Invalid evolutionary reproduction kind")
+            if not isinstance(record.get("parents"), list) or len(record["parents"]) > 2:
+                raise ValueError("Invalid evolutionary parent list")
+            for parent in record["parents"]:
+                if parent is not None and (parent not in lineage or int(parent.split(":")[0]) >= generation):
+                    raise ValueError("Evolutionary parents must be recorded earlier generations")
     frames, genomes = data.get("frames"), data.get("genomes")
     if not isinstance(frames, list) or not frames or len(frames) > 600:
         raise ValueError("Replay must contain 1–600 recorded frames")
@@ -229,7 +272,10 @@ def validate_replay(data):
         raise ValueError("Invalid genome table")
     from neat.genome import Genome, NodeGene, NodeType
 
+    networks = {}
     for key, raw_genome in genomes.items():
+        if data['version'] == 2 and key not in data['lineage']:
+            raise ValueError("Genome is missing evolutionary lineage entry")
         genome = GenomeRecord.model_validate(raw_genome)
         if genome.key != key or len({node.id for node in genome.nodes}) != len(genome.nodes):
             raise ValueError("Invalid genome identity or duplicate node")
@@ -237,6 +283,7 @@ def validate_replay(data):
                          connections=[ConnectionGene(edge.in_node, edge.out_node, edge.weight, edge.enabled, edge.innovation) for edge in genome.connections])
         if len(decoded.inputs) != 9 or len(decoded.outputs) != 4:
             raise ValueError("Replay genome must have nine inputs and four outputs")
+        networks[key] = Network(decoded)
     history = data.get("history")
     if not isinstance(history, list) or len(history) > config.generations:
         raise ValueError("Invalid evaluated history")
@@ -277,11 +324,19 @@ def validate_replay(data):
                 raise ValueError("Body score differs from the declared fitness definition")
             inference = body["inference"]
             if inference is not None:
+                if inference.get('world_tick') is not None and inference['world_tick'] > frame['tick']:
+                    raise ValueError("Inference timestamp is in the future of its recorded frame")
                 node_ids = {str(node["id"]) for node in genomes[body["genome"]]["nodes"]}
                 if {str(identity) for identity in inference["values"]} != node_ids:
                     raise ValueError("Activation values must reference every genome node")
                 if body["action"] != max(range(4), key=lambda index: inference["outputs"][index]):
                     raise ValueError("Recorded action differs from actual inference argmax")
+                outputs, values = networks[body["genome"]].activate_with_trace(inference["inputs"])
+                serialized_values = {str(key): value for key, value in inference["values"].items()}
+                if any(not math.isclose(actual, recorded, rel_tol=1e-12, abs_tol=1e-12) for actual, recorded in zip(outputs, inference["outputs"])):
+                    raise ValueError("Recorded outputs disagree with genome inference")
+                if any(not math.isclose(value, serialized_values[str(key)], rel_tol=1e-12, abs_tol=1e-12) for key, value in values.items()):
+                    raise ValueError("Recorded node activations disagree with genome inference")
             for axis, size in [("x", config.width), ("y", config.height)]:
                 if type(body.get(axis)) is not int or not 0 <= body[axis] < size:
                     raise ValueError("Organism out of world bounds")
@@ -307,6 +362,12 @@ def validate_replay(data):
             raise ValueError("Birth/death metrics disagree with frame contents")
         if metrics.food_eaten != sum(body.food_eaten for body in validated.organisms):
             raise ValueError("Consumption metric disagrees with recorded bodies")
+        mean_energy = sum(body.energy for body in alive) / max(1, len(alive))
+        if not math.isclose(metrics.mean_energy, mean_energy, rel_tol=1e-12, abs_tol=1e-12):
+            raise ValueError("Mean energy disagrees with living body state")
+        expected_actions = [sum(body.action == action for body in alive) for action in range(4)]
+        if metrics.actions != expected_actions:
+            raise ValueError("Action counts disagree with living acted bodies")
     return data
 
 
@@ -318,10 +379,12 @@ class Manager:
         self.speed = 20.0
         self.achieved = 0.0
         self.error = None
+        self.run_id = 0
         self.stop = threading.Event()
         self.thread = None
 
     def start_worker(self):
+        self.stop.clear()
         self.thread = threading.Thread(target=self._worker, daemon=True, name="clage-world")
         self.thread.start()
 
@@ -334,6 +397,7 @@ class Manager:
         experiment = Experiment(config)
         with self.lock:
             self.experiment = experiment
+            self.run_id += 1
             self.paused = True
             self.error = None
             self.achieved = 0.0
@@ -347,12 +411,20 @@ class Manager:
                 self.paused = True
                 self.achieved = 0.0
             elif action == "resume":
+                if self.error is not None:
+                    raise ValueError("Reset the run after an engine/safety error before resuming")
                 if self.experiment.complete:
                     raise ValueError("Completed runs must be reset, not resumed")
                 self.paused = False
             elif action == "step":
                 self.paused = True
-                self.experiment.advance()
+                if self.error is not None:
+                    raise ValueError("Reset the run after an engine/safety error before stepping")
+                try:
+                    self.experiment.advance()
+                except Exception as error:
+                    self.error = f"{type(error).__name__}: {error}"
+                    raise ValueError(self.error) from error
             elif action == "speed":
                 if speed is None or not 1 <= speed <= 120:
                     raise ValueError("Speed must be 1–120 ticks/s")
@@ -367,7 +439,14 @@ class Manager:
         with self.lock:
             state = self.experiment.snapshot() if self.experiment else {"frame": None}
             return copy.deepcopy({**state, "paused": self.paused, "speed": self.speed,
-                                  "achieved_tps": round(self.achieved, 1), "error": self.error})
+                                  "achieved_tps": round(self.achieved, 1), "error": self.error,
+                                  "run_id": self.run_id})
+
+    def stream_snapshot(self, previous_signature):
+        with self.lock:
+            signature = (self.run_id, self.experiment.sequence if self.experiment else None,
+                         self.paused, self.speed, self.error)
+            return signature, self.snapshot() if signature != previous_signature else None
 
     def _worker(self):
         while not self.stop.is_set():
@@ -376,8 +455,11 @@ class Manager:
             with self.lock:
                 if self.experiment and not self.paused and not self.experiment.complete:
                     try:
+                        generation, tick = self.experiment.session.generation, self.experiment.session.tick
                         self.experiment.advance()
-                        advanced = True
+                        advanced = self.experiment.session.generation == generation and self.experiment.session.tick == tick + 1
+                        if not advanced:
+                            self.achieved = 0.0
                         if self.experiment.complete:
                             self.paused = True
                     except Exception as error:
@@ -395,6 +477,9 @@ def evaluate_policies(config, champion, seeds=(10001, 10002, 10003, 10004, 10005
     """Single-founder held-out trials; no training. Per-policy, per-seed outcomes."""
     from neat.genome import Genome
 
+    seeds = tuple(seeds)
+    if not seeds or len(set(seeds)) != len(seeds) or any(type(seed) is not int or seed < 0 for seed in seeds):
+        raise ValueError("Evaluation seeds must be distinct nonnegative integers")
     if config.seed in seeds:
         raise ValueError("Held-out world seeds overlap the training seed; choose a different training seed")
 
@@ -421,11 +506,16 @@ def evaluate_policies(config, champion, seeds=(10001, 10002, 10003, 10004, 10005
                             "survivors": sum(body.alive for body in session.organisms),
                             "births": len(session.organisms) - 1, "fitness": genome.fitness})
     return {"schema": "clage-policy-evaluation", "version": 1,
-            "evaluation_set": "heldout-worlds-v1", "seeds": list(seeds),
+            "evaluation_set": "heldout-worlds-v1" if seeds == (10001, 10002, 10003, 10004, 10005) else "custom-seeds-v1", "seeds": list(seeds),
             "config": config.model_dump(), "founders": 1,
             "champion": _serialize_genome(champion, 0) if champion else None,
             "metadata": provenance(), "results": results,
-            "limitations": "Five prespecified seeds; identical initial world seeds, not identical later food layouts. Single-founder clonal trials; no inference of learning or superiority."}
+            "resolved_world": asdict(config.world()),
+            "world_overrides": {"seed_base": "per-row world seed", "ticks": min(config.ticks, 300), "founders": 1},
+            "policies": {"move": "always MOVE", "random": "uniform four actions; separate Random(world_seed+991)",
+                         "forager": "privileged orientation-aware reference: global nearest-food direction plus body facing (not available in the original nine-input neural interface); dominant axis, turn toward target, MOVE otherwise",
+                         "champion": "saved evaluated genome, unchanged argmax policy; no training"},
+            "limitations": f"{len(seeds)} evaluation seeds; identical initial world seeds, not identical later food layouts. Forager has privileged facing information. Single-founder clonal trials; no inference of learning or superiority."}
 
 
 class PolicyNetwork:

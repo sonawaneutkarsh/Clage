@@ -46,6 +46,7 @@ class Network:
         self._output_ids: List[int] = sorted(
             n.id for n in genome.outputs if n.node_type is NodeType.OUTPUT
         )
+        self._input_set = frozenset(self._input_ids)
         self._bias: Dict[int, float] = {n.id: n.bias for n in genome.nodes.values()}
 
         self._incoming: Dict[int, List[Tuple[int, float]]] = {
@@ -120,7 +121,7 @@ class Network:
             values[nid] = value
 
         for nid in self._order:
-            if nid in self._input_ids:
+            if nid in self._input_set:
                 continue
             total = self._bias[nid]
             for source, weight in self._incoming.get(nid, ()):

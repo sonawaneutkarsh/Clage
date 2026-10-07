@@ -134,6 +134,8 @@ class WorldSession:
         for organism in self.organisms:
             if organism.alive:
                 child = organism.act(self.world, self.config)
+                if organism.capture_inference and organism.last_inference is not None:
+                    organism.last_inference['world_tick'] = self.tick + 1
                 if child is not None:
                     newborns.append(child)
         self.organisms.extend(newborns)

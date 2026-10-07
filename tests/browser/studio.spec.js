@@ -2,13 +2,18 @@ import { test, expect } from '@playwright/test';
 import fs from 'node:fs/promises';
 
 const config = { population: 12, generations: 2, ticks: 12, width: 16, height: 12, food: 30, regrowth: 1, seed: 42 };
+let pageErrors = [];
 
 test.beforeEach(async ({ request, page }) => {
+  pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
   await request.post('/api/runs', { data: config });
   await page.goto('/');
   await expect(page.locator('#population')).not.toHaveText('—');
   await expect(page.locator('#render-rate')).not.toContainText('—');
 });
+
+test.afterEach(async () => expect(pageErrors).toEqual([]));
 
 async function pickOrganism(page, request) {
   const data = await (await request.get('/api/state')).json();
@@ -27,6 +32,8 @@ test('live controls, keyboard stepping, inspector, graph and screenshots', async
   page.on('pageerror', error => errors.push(error.message));
   await page.locator('#step').click();
   await expect(page.locator('#tick')).toContainText('tick 1 /');
+  await page.keyboard.press('.');
+  await expect(page.locator('#tick')).toContainText('tick 2 /');
   await page.locator('#play').click();
   await expect(page.locator('#play')).toHaveText('Ⅱ Pause');
   await page.locator('#play').click();
@@ -38,6 +45,7 @@ test('live controls, keyboard stepping, inspector, graph and screenshots', async
   await pickOrganism(page, request);
   await page.locator('#follow').click();
   await expect(page.locator('#follow')).toHaveText('Following ✓');
+  await page.locator('#fit').click();
   await page.locator('#grid').click();
   await expect(page.locator('#grid')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#layer').selectOption('energy');
@@ -78,6 +86,9 @@ test('complete evolution, replay scrub, generation navigation and exports', asyn
   await expect(page.locator('#mode')).toContainText('COMPLETE');
   await page.locator('[data-view=evolution]').click();
   await expect(page.locator('#history tbody tr')).toHaveCount(2);
+  await page.locator('#evolution-genome').selectOption('1:0');
+  await expect(page.locator('#evolution-tree .genome-ancestor')).not.toHaveCount(0);
+  await expect(page.locator('#evolution-detail')).toContainText('parents');
   await page.screenshot({ path: 'docs/studio/evolution.png', fullPage: true });
   await page.locator('[data-view=ecosystem]').click();
   await page.locator('#review').click();
@@ -136,4 +147,30 @@ test('large population, empty food and error handling', async ({ page, request }
   await page.screenshot({ path: 'docs/studio/large-population.png', fullPage: true });
   await page.locator('#import').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{"schema":"no"}') });
   await expect(page.locator('#toast')).toContainText('Unsupported');
+});
+
+test('background multi-generation run stays interactive and finishes with evaluated history', async ({ page, request }) => {
+  await request.post('/api/runs', { data: { population: 32, generations: 3, ticks: 150,
+    width: 24, height: 24, food: 80, seed: 55 } });
+  await expect(page.locator('#population')).toHaveText('32');
+  await page.locator('#speed').fill('120');
+  await page.locator('#speed').dispatchEvent('change');
+  await page.locator('#play').click();
+  await page.locator('#layer').selectOption('food');
+  await expect(page.locator('#mode')).toContainText('RUNNING');
+  await page.locator('[data-view=neural]').click();
+  await expect(page.locator('#network .node')).toHaveCount(13);
+  await page.locator('[data-view=ecosystem]').click();
+  await expect(page.locator('#mode')).toContainText('COMPLETE', { timeout: 20000 });
+  await expect(page.locator('#generation')).toHaveText('02');
+  await page.locator('[data-view=evolution]').click();
+  await expect(page.locator('#history tbody tr')).toHaveCount(3);
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#champion-export').click();
+  const downloaded = await downloadPromise;
+  const filename = 'test-results/champion.json';
+  await downloaded.saveAs(filename);
+  const champion = JSON.parse(await fs.readFile(filename, 'utf8'));
+  expect(champion.genome.fitness).not.toBeNull();
+  expect(champion.metadata.checkpoint).toBe(false);
 });

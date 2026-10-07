@@ -29,9 +29,10 @@ class Organism:
         config: EnvironmentConfig,
         facing: Tuple[int, int] = Direction.NORTH,
         energy: Optional[float] = None,
+        network: Optional[Network] = None,
     ) -> None:
         self.genome = genome
-        self.network = Network(genome)
+        self.network = network if network is not None else Network(genome)
         self.x = x
         self.y = y
         self.facing = facing
@@ -161,6 +162,7 @@ class Organism:
             config=config,
             facing=self.facing,
             energy=child_energy,
+            network=self.network,
         )
         child.parent = self
         child.capture_inference = self.capture_inference

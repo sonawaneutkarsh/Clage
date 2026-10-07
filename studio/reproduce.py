@@ -12,13 +12,16 @@ def reproduce(bundle):
     validate_replay(bundle)
     config = RunConfig.model_validate(bundle['config']).model_copy(update={'record': False})
     experiment = Experiment(config)
-    expected = {frame['sequence']: frame for frame in bundle['frames']}
+    expected = {frame['sequence']: frame for frame in json.loads(json.dumps(bundle['frames']))}
     final_sequence = max(expected)
     checked = 0
     while True:
         frame = experiment.current
         if frame['sequence'] in expected:
             actual = json.loads(json.dumps(frame))
+            for body, recorded in zip(actual['organisms'], expected[frame['sequence']]['organisms']):
+                if body['inference'] is not None and recorded['inference'] is not None and 'world_tick' not in recorded['inference']:
+                    body['inference'].pop('world_tick', None)
             if actual != expected[frame['sequence']]:
                 raise ValueError(f"Deterministic replay mismatch at sequence {frame['sequence']}")
             checked += 1
