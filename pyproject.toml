@@ -1,6 +1,6 @@
 [project]
 name = "clage"
-version = "0.3.0"
+version = "0.4.1"
 description = "From-scratch NEAT neuroevolution engine and 2D artificial-life simulation"
 authors = [
     {name = "Utkarsh Sonawane"}
@@ -23,7 +23,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools>=42"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
@@ -47,3 +47,4 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 studio = ["static/*"]
+experiments = ["configs/*.json"]

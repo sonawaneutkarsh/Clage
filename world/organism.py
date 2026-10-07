@@ -67,8 +67,8 @@ class Organism:
             dx_food = max(-1.0, min(1.0, (nearest[0] - self.x) / radius))
             dy_food = max(-1.0, min(1.0, (nearest[1] - self.y) / radius))
 
-        half_x = max(1, world.width // 2 - 1)
-        half_y = max(1, world.height // 2 - 1)
+        half_x = max(1, (world.width - 1) // 2)
+        half_y = max(1, (world.height - 1) // 2)
         # boundary proximity: 1.0 at the wall, 0.0 toward the center
         boundary_x = 1.0 - min(self.x, world.width - 1 - self.x) / half_x
         boundary_y = 1.0 - min(self.y, world.height - 1 - self.y) / half_y
@@ -168,4 +168,8 @@ class Organism:
         child.capture_inference = self.capture_inference
         world.place_organism(child)
         self.offspring += 1
+        for organism in (self, child):
+            if organism.energy <= 0:
+                organism.alive = False
+                world.remove_organism(organism)
         return child

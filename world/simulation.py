@@ -154,6 +154,8 @@ class WorldSession:
             best_per_genome[genome] = max(best_per_genome.get(genome, 0.0), score)
         for genome in self.population:
             genome.fitness = best_per_genome.get(genome, 0.0)
+        if self.recorder is not None:
+            self.recorder.finalize()
 
 
 def make_evaluator(config: EnvironmentConfig) -> Callable[[List[Genome], int], None]:

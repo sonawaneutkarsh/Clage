@@ -155,8 +155,10 @@ def test_opposite_edges_child_stays_valid_and_acyclic():
     b = Genome.minimal(input_ids=[0], output_ids=[10])
     a.add_node(NodeGene(id=50, node_type=NodeType.HIDDEN))
     b.add_node(NodeGene(id=50, node_type=NodeType.HIDDEN))
-    a.add_connection(ConnectionGene(50, 0, 1.0, innovation=1))  # 50 -> 0
-    b.add_connection(ConnectionGene(0, 50, 1.0, innovation=2))  # 0 -> 50
+    a.add_node(NodeGene(id=51, node_type=NodeType.HIDDEN))
+    b.add_node(NodeGene(id=51, node_type=NodeType.HIDDEN))
+    a.add_connection(ConnectionGene(50, 51, 1.0, innovation=1))
+    b.add_connection(ConnectionGene(51, 50, 1.0, innovation=2))
     a.fitness = b.fitness = 0.0
 
     child = crossover(a, b, FixedRng([0.1, 0.1]))  # keep both

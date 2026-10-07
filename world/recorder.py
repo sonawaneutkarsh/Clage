@@ -23,7 +23,7 @@ from .simulation import run_generation
 __all__ = ["GenerationRecorder", "record_generation_to_file"]
 
 SCHEMA = "clage-generation-replay"
-VERSION = 1
+VERSION = 2
 
 _FACING_LABELS = {
     Direction.NORTH: "N",
@@ -93,6 +93,13 @@ class GenerationRecorder:
         self._next_tick = 0
         self._organism_ids: Dict[int, int] = {}  # id(organism) -> stable integer
         self.context: Dict[str, Any] = {}  # optional population-level context for viewers
+        self.fitness_phase = "unevaluated"
+
+    def finalize(self) -> None:
+        """Capture scores only after the world evaluator has stamped genomes."""
+        for genome, identity in self.genome_ids.items():
+            self.genomes[identity]["fitness"] = genome.fitness
+        self.fitness_phase = "evaluated"
 
     # ------------------------------------------------------------- recording
 
@@ -122,6 +129,7 @@ class GenerationRecorder:
         return {
             "schema": SCHEMA,
             "version": VERSION,
+            "fitness_phase": self.fitness_phase,
             "generation": self.generation,
             "config": asdict(self.config),
             "genomes": self.genomes,

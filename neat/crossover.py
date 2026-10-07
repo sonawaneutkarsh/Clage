@@ -38,10 +38,19 @@ def crossover(
     inherit_disabled_prob: float = DEFAULT_INHERIT_DISABLED_PROB,
 ) -> Genome:
     """Create a child genome from two parents. Neither parent is modified."""
+    parent_a.validate()
+    parent_b.validate()
+    from .innovation import InnovationDB
+    InnovationDB().register_genomes([parent_a, parent_b])
+    for identity in parent_a.nodes.keys() & parent_b.nodes.keys():
+        if parent_a.nodes[identity].node_type is not parent_b.nodes[identity].node_type:
+            raise ValueError("shared node has conflicting roles")
     nodes: Dict[int, NodeGene] = {nid: node.copy() for nid, node in parent_a.nodes.items()}
     for nid, node in parent_b.nodes.items():
         if nid not in nodes:
             nodes[nid] = node.copy()
+        elif nodes[nid].bias != node.bias and rng.random() >= 0.5:
+            nodes[nid].bias = node.bias
 
     a_by_innov: Dict[int, ConnectionGene] = {c.innovation: c for c in parent_a.connections}
     b_by_innov: Dict[int, ConnectionGene] = {c.innovation: c for c in parent_b.connections}

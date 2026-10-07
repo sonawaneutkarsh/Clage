@@ -188,8 +188,8 @@ class EnvironmentConfig:
     def world_rng_seed(self, generation: int) -> int:
         """Deterministic world seed for a generation.
 
-        Uses a hash of ``(seed_base, generation)`` so that different
-        (trial seed, generation) pairs never collide on the same world layout
+        Uses a hash of ``(seed_base, generation)`` to avoid systematic additive
+        collisions. A finite hash cannot guarantee collision-free seeds or layouts
         (an additive ``seed_base + generation * stride`` scheme does collide:
         trial 1 at gen 0 and trial 0 at gen 1 would share a world).
         """

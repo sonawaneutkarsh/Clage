@@ -12,6 +12,11 @@ def reproduce(bundle):
     validate_replay(bundle)
     config = RunConfig.model_validate(bundle['config']).model_copy(update={'record': False})
     experiment = Experiment(config)
+    for definition in ("evolution_definition", "observation_definition"):
+        recorded = bundle.get('metadata', {}).get(definition)
+        if recorded != experiment.metadata.get(definition):
+            raise ValueError(f"Scientific definition mismatch: {definition}; replay remains viewable, "
+                             "but rerunning requires the original source")
     expected = {frame['sequence']: frame for frame in json.loads(json.dumps(bundle['frames']))}
     final_sequence = max(expected)
     checked = 0

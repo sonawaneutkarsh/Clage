@@ -116,6 +116,9 @@ class Genome:
         """
         in_ids = DEFAULT_INPUT_IDS if input_ids is None else tuple(input_ids)
         out_ids = DEFAULT_OUTPUT_IDS if output_ids is None else tuple(output_ids)
+        if (len(set(in_ids)) != len(in_ids) or len(set(out_ids)) != len(out_ids)
+                or set(in_ids) & set(out_ids)):
+            raise ValueError("interface IDs must be unique and disjoint")
 
         nodes: Dict[int, NodeGene] = {}
         for nid in in_ids:
@@ -179,8 +182,8 @@ class Genome:
 
         src_type = self.nodes[in_node].node_type
         dst_type = self.nodes[out_node].node_type
-        if src_type is NodeType.INPUT and dst_type is NodeType.INPUT:
-            raise ValueError("INPUT->INPUT connections are not allowed")
+        if dst_type is NodeType.INPUT:
+            raise ValueError("connections into INPUT nodes are not allowed")
         if src_type is NodeType.OUTPUT and dst_type is NodeType.OUTPUT:
             raise ValueError("OUTPUT->OUTPUT connections are not allowed (feed-forward)")
 
@@ -267,7 +270,11 @@ class Genome:
                 raise ValueError(f"dict key {nid} disagrees with NodeGene.id {node.id}")
 
         seen_pairs: set[tuple[int, int]] = set()
+        seen_innovations: set[int] = set()
         for conn in self.connections:
+            if conn.innovation in seen_innovations:
+                raise ValueError(f"duplicate innovation {conn.innovation}")
+            seen_innovations.add(conn.innovation)
             if conn.in_node not in self.nodes:
                 raise ValueError(f"connection {conn} references unknown in_node {conn.in_node}")
             if conn.out_node not in self.nodes:
@@ -277,8 +284,8 @@ class Genome:
 
             src = self.nodes[conn.in_node].node_type
             dst = self.nodes[conn.out_node].node_type
-            if src is NodeType.INPUT and dst is NodeType.INPUT:
-                raise ValueError(f"INPUT->INPUT connection {conn.in_node}->{conn.out_node}")
+            if dst is NodeType.INPUT:
+                raise ValueError(f"connection into INPUT {conn.in_node}->{conn.out_node}")
             if src is NodeType.OUTPUT and dst is NodeType.OUTPUT:
                 raise ValueError(f"OUTPUT->OUTPUT connection {conn.in_node}->{conn.out_node}")
 

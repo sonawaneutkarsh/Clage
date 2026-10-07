@@ -94,6 +94,8 @@ def provenance():
     except PackageNotFoundError:
         engine_version = "source-checkout"
     return {"engine_version": engine_version, "commit": commit, "dirty": dirty,
+            "evolution_definition": "neat-reconciled-v1",
+            "observation_definition": "world-observations-v2-odd-boundaries",
             "studio_contract": "1.0-slice-v2", "created": datetime.now(timezone.utc).isoformat(),
             "fitness_definition": "world-fitness-v1: max body (3*food+.01*age+.5*offspring)",
             "observations": OBSERVATIONS, "actions": ACTIONS, "checkpoint": False}

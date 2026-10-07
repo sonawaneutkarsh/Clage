@@ -157,24 +157,24 @@ class World:
 
     def food_density(self, x: int, y: int, radius: int) -> float:
         count = 0
-        for dy in range(-radius, radius + 1):
-            for dx in range(-radius, radius + 1):
-                if (dx, dy) == (0, 0):
+        for ny in range(max(0, y - radius), min(self.height, y + radius + 1)):
+            row = self.cells[ny]
+            for nx in range(max(0, x - radius), min(self.width, x + radius + 1)):
+                if (nx, ny) == (x, y):
                     continue
-                nx, ny = x + dx, y + dy
-                if (nx, ny) in self.food:
+                if row[nx] is FOOD:
                     count += 1
         max_count = (2 * radius + 1) ** 2 - 1
         return count / max_count
 
     def organism_density(self, x: int, y: int, radius: int, exclude: object) -> float:
         count = 0
-        for dy in range(-radius, radius + 1):
-            for dx in range(-radius, radius + 1):
-                if (dx, dy) == (0, 0):
+        for ny in range(max(0, y - radius), min(self.height, y + radius + 1)):
+            row = self.cells[ny]
+            for nx in range(max(0, x - radius), min(self.width, x + radius + 1)):
+                if (nx, ny) == (x, y):
                     continue
-                nx, ny = x + dx, y + dy
-                occupant = self.occupant(nx, ny)
+                occupant = row[nx]
                 if occupant is not None and occupant is not FOOD and occupant is not exclude:
                     count += 1
         max_count = (2 * radius + 1) ** 2 - 1

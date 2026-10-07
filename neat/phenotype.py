@@ -56,6 +56,8 @@ class Network:
             self._incoming[conn.out_node].append((conn.in_node, conn.weight))
 
         self._order: List[int] = self._topological_order(genome)
+        self._plan = [(identity, self._bias[identity], self._incoming[identity])
+                      for identity in self._order if identity not in self._input_set]
 
     @staticmethod
     def _topological_order(genome: Genome) -> List[int]:
@@ -120,11 +122,9 @@ class Network:
         for nid, value in zip(self._input_ids, inputs):
             values[nid] = value
 
-        for nid in self._order:
-            if nid in self._input_set:
-                continue
-            total = self._bias[nid]
-            for source, weight in self._incoming.get(nid, ()):
+        for nid, bias, incoming in self._plan:
+            total = bias
+            for source, weight in incoming:
                 total += values[source] * weight
             values[nid] = ACTIVATION(total)
 

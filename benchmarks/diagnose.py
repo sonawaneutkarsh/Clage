@@ -220,14 +220,13 @@ def diagnose_problem(problem: Problem, seed: int) -> str:
     )
 
     if all_ok and solved == 0:
-        suspect = "search/parameterization: the layers work; solutions exist but aren't found "
-        "with defaults — try more generations, larger population, or higher structural "
-        "mutation rates."
+        suspect = "search/parameterization is a hypothesis, not a diagnosis. These smoke checks "
+        "do not prove representability, correctness, or generalization. No defaults were tuned."
     elif all_ok:
         suspect = "borderline parameterization / seed luck (some seeds solve)."
     else:
         suspect = "the failing layers above are the prime suspects."
-    lines.append(f"\n**Most likely suspect:** {suspect}")
+    lines.append(f"\n**Hypothesis (not established cause):** {suspect}")
     return "\n".join(lines)
 
 

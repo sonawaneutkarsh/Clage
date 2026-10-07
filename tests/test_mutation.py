@@ -157,7 +157,7 @@ def test_add_connection_does_not_mint_innovations_for_invalid_pairs():
         mutate_add_connection(g, random.Random(123), db)
 
     assert len(g.connections) == 3
-    assert len(db.to_dict()["connection_innovations"]) == 0
+    assert len(db.to_dict()["connection_innovations"]) == 3
 
 
 def test_add_connection_innovation_reused_across_genomes():
@@ -235,7 +235,7 @@ def test_add_node_different_splits_get_different_node_ids():
         return g
 
     h1 = mutate_add_node(fresh((0, 10), 1, 0.5), random.Random(0), db)
-    h2 = mutate_add_node(fresh((1, 11), 2, 0.7), random.Random(0), db)
+    h2 = mutate_add_node(fresh((1, 11), 4, 0.7), random.Random(0), db)
     assert h1.id != h2.id
 
 

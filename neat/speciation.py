@@ -138,7 +138,7 @@ def compatibility_distance(a: Genome, b: Genome, config: SpeciationConfig) -> fl
     (set to 1 for small genomes, per the NEAT paper).
     """
     excess, disjoint, _ = gene_counts(a, b)
-    n = max(len(a.connections), len(b.connections))
+    n = max(1, len(a.connections), len(b.connections))
     if n < config.small_genome_threshold:
         n = 1
     return (

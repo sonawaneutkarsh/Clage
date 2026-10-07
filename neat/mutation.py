@@ -178,6 +178,7 @@ def mutate_add_connection(
     disabled gene for the same pair) and cycle-creating edges are rejected;
     after ``max_attempts`` failed random draws the mutation is a no-op.
     """
+    db.register_genomes([genome])
     node_ids = list(genome.nodes)
     for _ in range(max_attempts):
         in_node = rng.choice(node_ids)
@@ -222,6 +223,7 @@ def mutate_add_node(
     no-op rather than minting a new node id + innovations — that would turn one
     invention into two and break crossover/speciation alignment.
     """
+    db.register_genomes([genome])
     enabled = [c for c in genome.connections if c.enabled]
     if not enabled:
         return None
@@ -232,8 +234,8 @@ def mutate_add_node(
     if recorded is not None and recorded.node_id in genome.nodes:
         return None  # same split, same node id, already present -> no-op
 
-    split.enabled = False
     innovation = db.add_node_innovation(split.in_node, split.out_node)
+    split.enabled = False
     node_id = innovation.node_id
     in_innovation = innovation.in_innovation
     out_innovation = innovation.out_innovation

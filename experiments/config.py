@@ -105,6 +105,17 @@ class ExperimentConfig:
         self._validate()
 
     def _validate(self) -> None:
+        for name in [self.name, *(condition.name for condition in self.conditions)]:
+            if (not isinstance(name, str) or not name or name in (".", "..")
+                    or "/" in name or "\\" in name):
+                raise ValueError("experiment/condition names must be safe path components")
+        if (not self.seeds or any(isinstance(seed, bool) or not isinstance(seed, int)
+                                  for seed in self.seeds)
+                or len(set(self.seeds)) != len(self.seeds)):
+            raise ValueError("seeds must be unique integers")
+        generations = self.base.get("neat", {}).get("generations", 1)
+        if isinstance(generations, bool) or not isinstance(generations, int) or generations < 1:
+            raise ValueError("generations must be a positive integer")
         # The unknown-parameter check stays FIRST and verbatim. Ordering is
         # deliberate: a config with a single non-control condition has zero
         # controls, so the control-count rule below would otherwise shadow the

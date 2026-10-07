@@ -16,7 +16,10 @@ mutation depends only on the injected ``random.Random``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Iterable, Optional, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .genome import Genome
 
 __all__ = ["NodeInnovation", "InnovationDB"]
 
@@ -47,6 +50,30 @@ class InnovationDB:
         self._innovation_counter: int = next_innovation
 
     # ------------------------------------------------------------- connections
+
+    def register_genomes(self, genomes: Iterable["Genome"]) -> None:
+        """Validate imported history atomically before reserving identifiers."""
+        pairs = dict(self._connection_innovations)
+        reverse = {innovation: pair for pair, innovation in pairs.items()}
+        if len(reverse) != len(pairs):
+            raise ValueError("innovation history is not one-to-one")
+        next_node = self._node_counter
+        next_innovation = self._innovation_counter
+        for genome in genomes:
+            genome.validate()
+            next_node = max(next_node, max(genome.nodes, default=-1) + 1)
+            for edge in genome.connections:
+                pair = (edge.in_node, edge.out_node)
+                if (pair in pairs and pairs[pair] != edge.innovation) or (
+                    edge.innovation in reverse and reverse[edge.innovation] != pair
+                ):
+                    raise ValueError("conflicting innovation/pair history")
+                pairs[pair] = edge.innovation
+                reverse[edge.innovation] = pair
+                next_innovation = max(next_innovation, edge.innovation + 1)
+        self._connection_innovations = pairs
+        self._node_counter = next_node
+        self._innovation_counter = next_innovation
 
     def connection_innovation(self, in_node: int, out_node: int) -> int:
         """Return the innovation number for ``in_node -> out_node``.
@@ -127,6 +154,21 @@ class InnovationDB:
             )
         db._node_counter = data["node_counter"]
         db._innovation_counter = data["innovation_counter"]
+        values = [db._node_counter, db._innovation_counter,
+                  *db._connection_innovations.values()]
+        if any(isinstance(value, bool) or not isinstance(value, int) or value < 0
+               for value in values):
+            raise ValueError("invalid innovation history counters/identifiers")
+        reverse = {innovation: pair for pair, innovation in db._connection_innovations.items()}
+        if len(reverse) != len(db._connection_innovations):
+            raise ValueError("conflicting innovation history")
+        if db._innovation_counter <= max(reverse, default=0):
+            raise ValueError("innovation counter overlaps recorded history")
+        for (source, target), split in db._node_innovations.items():
+            if (db._connection_innovations.get((source, split.node_id)) != split.in_innovation
+                    or db._connection_innovations.get((split.node_id, target)) != split.out_innovation
+                    or db._node_counter <= split.node_id):
+                raise ValueError("invalid split history")
         return db
 
     # ------------------------------------------------------------------ dunder

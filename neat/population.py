@@ -21,8 +21,8 @@ One generation:
     generation, not the one that was measured.
 
 Invariants: population size is constant; offspring are structurally valid;
-best raw fitness is non-decreasing when ``elitism >= 1``; elites are never
-mutated.
+the archived best raw fitness is non-decreasing; elites are never mutated.
+Evaluated scores need not increase when evaluation worlds change.
 """
 
 from __future__ import annotations
@@ -60,11 +60,11 @@ def _require_int_at_least(owner: str, field: str, value: object, lowest: int) ->
 
 
 def _structure_signature(genome: Genome) -> tuple:
-    """Lightweight structural identity: size + innovation numbers."""
+    """Exact heritable identity, independent of list insertion order."""
     return (
-        len(genome.nodes),
-        len(genome.connections),
-        tuple(c.innovation for c in genome.connections),
+        tuple(sorted((node.id, node.node_type.name, node.bias) for node in genome.nodes.values())),
+        tuple(sorted((edge.innovation, edge.in_node, edge.out_node, edge.weight, edge.enabled)
+                     for edge in genome.connections)),
     )
 
 
@@ -142,6 +142,9 @@ class Population:
             ]
 
         self.generation: int = 0
+        if initial_population is not None and self.population_size != len(initial_population):
+            raise ValueError("population_size must match initial_population")
+        self.db.register_genomes(self.population)
         self.best_genome: Optional[Genome] = None
         self.best_fitness: float = float("-inf")
         self.best_generation: int = -1
@@ -159,6 +162,7 @@ class Population:
         per-generation values belong to ``statistics[-1]`` or ``evaluated_best_genome``,
         not to a scan of ``self.population``.
         """
+        _require_int_at_least("Population", "generations", generations, 0)
         for _ in range(generations):
             self._next_generation()
         return self._stats[-generations:] if generations else []
@@ -194,6 +198,7 @@ class Population:
     def _next_generation(self) -> None:
         self.reproduction_records = {}
         self._evaluate()
+        self._archive_best()
         self.speciation.speciate(self.population)
         self.speciation.share_fitness()
         allocation = self.speciation.allocate_offspring(self.population_size)
@@ -297,7 +302,7 @@ class Population:
         budget: int,
         next_population: List[Genome],
     ) -> None:
-        elites = min(self.elitism, budget)
+        elites = min(self.elitism, budget, len(species.members))
         ranked = sorted(species.members, key=lambda g: g.fitness, reverse=True)
         for elite in ranked[:elites]:
             child = elite.copy()
@@ -365,15 +370,16 @@ class Population:
 
     # ------------------------------------------------------------- tracking
 
-    def _track_best_and_stats(self) -> None:
+    def _archive_best(self) -> None:
         best = self._evaluated_best_genome
         if best is not None and (self.best_genome is None or best.fitness > self.best_fitness):
             if self.record_reproduction:
                 self._best_origin = best
             self.best_genome = best.copy()
             self.best_fitness = best.fitness
-            self.best_generation = self.generation
+            self.best_generation = self.generation + 1
 
+    def _track_best_and_stats(self) -> None:
         self._stats.append(
             {
                 "generation": self.generation,
