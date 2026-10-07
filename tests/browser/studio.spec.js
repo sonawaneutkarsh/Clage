@@ -106,9 +106,13 @@ test('complete evolution, replay scrub, generation navigation and exports', asyn
   expect(recorded.frames).toHaveLength(26);
   await page.locator('#live').click();
   await page.locator('#import').setInputFiles(replayPath);
+  await expect(page.locator('#import')).toHaveValue('');
   await expect(page.locator('#replay-position')).toContainText('Frame 1/26');
   await page.locator('#compare-import').setInputFiles(replayPath);
   await expect(page.locator('#comparison-panel')).toBeVisible();
+  const chartPromise = page.waitForEvent('download');
+  await page.locator('#chart-export').click();
+  expect((await chartPromise).suggestedFilename()).toBe('clage-chart.png');
   const csvPromise = page.waitForEvent('download');
   await page.locator('#csv').click();
   expect((await csvPromise).suggestedFilename()).toBe('clage-metrics.csv');
@@ -117,6 +121,17 @@ test('complete evolution, replay scrub, generation navigation and exports', asyn
   expect((await pngPromise).suggestedFilename()).toBe('clage-world.png');
   await page.locator('#clear-compare').click();
   await expect(page.locator('#comparison-panel')).not.toBeVisible();
+  const compressed = await request.get('/api/export');
+  expect(compressed.ok()).toBe(true);
+  await page.locator('#import').setInputFiles({ name: 'replay.json.gz', mimeType: 'application/gzip', buffer: await compressed.body() });
+  await expect(page.locator('#import')).toHaveValue('');
+  await expect(page.locator('#replay-position')).toContainText('Frame 1/26');
+  await page.locator('#speed').fill('10');
+  await page.locator('#play').click();
+  await expect(page.locator('#mode')).toContainText('REPLAY · PLAYING');
+  await expect(page.locator('#replay-position')).not.toContainText('Frame 1/26');
+  await page.locator('#play').click();
+  await expect(page.locator('#mode')).toContainText('REPLAY · PAUSED');
 });
 
 test('research baselines, local save and responsive view', async ({ page, request }) => {
@@ -129,6 +144,10 @@ test('research baselines, local save and responsive view', async ({ page, reques
   await page.locator('#save').click();
   await expect(page.locator('#toast')).toContainText('Saved');
   await expect(page.locator('#artifacts a').first()).toBeVisible();
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.locator('[data-view=ecosystem]').click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(1024);
+  await page.screenshot({ path: 'docs/studio/tablet.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('[data-view=ecosystem]').click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -147,6 +166,12 @@ test('large population, empty food and error handling', async ({ page, request }
   await page.screenshot({ path: 'docs/studio/large-population.png', fullPage: true });
   await page.locator('#import').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{"schema":"no"}') });
   await expect(page.locator('#toast')).toContainText('Unsupported');
+  await request.post('/api/runs', { data: { ...config, food: 0, metabolism: 1.0, repro_threshold: 2.0 } });
+  await expect(page.locator('#population')).toHaveText('12');
+  await page.locator('#step').click();
+  await expect(page.locator('#population')).toHaveText('0');
+  await expect(page.locator('#energy')).toHaveText('0.000');
+  await page.screenshot({ path: 'docs/studio/empty-world.png', fullPage: true });
 });
 
 test('background multi-generation run stays interactive and finishes with evaluated history', async ({ page, request }) => {

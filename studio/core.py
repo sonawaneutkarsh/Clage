@@ -13,6 +13,7 @@ from collections import Counter, deque
 from dataclasses import asdict
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import Any, Literal
 from weakref import WeakKeyDictionary
 
@@ -78,10 +79,15 @@ class RunConfig(BaseModel):
 
 def provenance():
     try:
-        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True,
+        source = Path(__file__).resolve().parents[1]
+        repository = subprocess.check_output(["git", "-C", str(source), "rev-parse", "--show-toplevel"],
+                                              text=True, stderr=subprocess.DEVNULL).strip()
+        if Path(repository).resolve() != source:
+            raise ValueError("Installed source is not a Git repository root")
+        commit = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True,
                                          stderr=subprocess.DEVNULL).strip()
-        dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], text=True))
-    except (OSError, subprocess.CalledProcessError):
+        dirty = bool(subprocess.check_output(["git", "-C", str(source), "status", "--porcelain"], text=True))
+    except (OSError, subprocess.CalledProcessError, ValueError):
         commit, dirty = None, None
     try:
         engine_version = version("clage")

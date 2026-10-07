@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from neat.genome import ConnectionGene, Genome
 from neat.phenotype import Network
-from studio.core import Experiment, Manager, RunConfig, evaluate_policies, validate_replay
+from studio.core import Experiment, Manager, RunConfig, evaluate_policies, provenance, validate_replay
 from studio.server import create_app
 from studio.reproduce import reproduce
 from studio.evaluate import evaluate_bundle
@@ -35,6 +35,20 @@ def test_complete_run_validation_reports_actual_recorded_reproduction():
     assert result['completed_generations'] == 2
     assert result['world_ticks'] == 16
     assert result['reproduction']['recorded_frames_verified'] == result['retained_frames']
+
+
+def test_provenance_tracks_source_repository_not_working_directory(monkeypatch, tmp_path):
+    expected = provenance()['commit']
+    assert expected is not None
+    monkeypatch.chdir(tmp_path)
+    assert provenance()['commit'] == expected
+
+
+def test_provenance_does_not_attribute_installed_source_to_an_unrelated_repository(monkeypatch, tmp_path):
+    monkeypatch.setattr('studio.core.__file__', str(tmp_path / 'studio' / 'core.py'))
+    recorded = provenance()
+    assert recorded['commit'] is None
+    assert recorded['dirty'] is None
 
 
 def test_inference_instrumentation_is_exact_and_readonly():
