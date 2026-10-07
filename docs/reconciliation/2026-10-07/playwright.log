@@ -1,0 +1,44 @@
+
+> test:e2e
+> playwright test
+
+[WebServer] INFO:     Started server process [69104]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8876 (Press CTRL+C to quit)
+
+Running 7 tests using 1 worker
+
+(node:69105) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:61506 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:61509 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:61510 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:61512 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  1 tests/browser/performance.spec.js:4:1 › predeclared paused Canvas workloads: 72, 512, 1000, 2000 bodies (14.3s)
+[WebServer] INFO:     127.0.0.1:61517 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  2 tests/browser/studio.spec.js:30:1 › live controls, keyboard stepping, inspector, graph and screenshots (2.2s)
+[WebServer] INFO:     127.0.0.1:61524 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  3 tests/browser/studio.spec.js:64:1 › configuration validation, frozen definitions and browser presets (2.0s)
+[WebServer] INFO:     127.0.0.1:61532 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  4 tests/browser/studio.spec.js:84:1 › complete evolution, replay scrub, generation navigation and exports (2.7s)
+[WebServer] INFO:     127.0.0.1:61538 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  5 tests/browser/studio.spec.js:137:1 › research baselines, local save and responsive view (2.0s)
+[WebServer] INFO:     127.0.0.1:61543 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:61544 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  6 tests/browser/studio.spec.js:157:1 › large population, empty food and error handling (3.6s)
+[WebServer] INFO:     127.0.0.1:61551 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  7 tests/browser/studio.spec.js:177:1 › background multi-generation run stays interactive and finishes with evaluated history (6.7s)
+
+  7 passed (34.3s)
