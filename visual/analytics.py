@@ -38,6 +38,8 @@ DEFAULT_METRICS = [metric for metric in METRICS if metric != "food_alignment"]
 
 def plot_metric(ax, exp_dir, conditions: List[str], metric: str) -> None:
     """One metric, all conditions overlaid as mean +- std bands."""
+    if metric not in METRICS:
+        raise ValueError(f"unknown metric {metric!r}; available: {METRICS}")
     for name in conditions:
         trials = load_condition_trials(exp_dir, name)
         aggregated = aggregate_condition(trials)
@@ -85,17 +87,15 @@ def environment_table(exp_dir, conditions: Optional[List[str]] = None) -> plt.Fi
         "food_target", "food_regrowth_per_tick", "repro_threshold",
         "repro_fraction", "metabolism",
     ]
-    rows = []
-    for name in conditions:
-        configs = load_condition_configs(exp_dir, name)
-        params = environmental_params(configs)
-        rows.append([name] + [params.get(key, "") for key in keys])
+    params_by_condition = [environmental_params(load_condition_configs(exp_dir, name))
+                           for name in conditions]
+    rows = [[key] + [params.get(key, "") for params in params_by_condition] for key in keys]
 
-    fig, ax = plt.subplots(figsize=(13, 0.5 + 0.4 * len(rows)))
+    fig, ax = plt.subplots(figsize=(max(7, 2 * len(conditions)), 1 + 0.4 * len(rows)))
     ax.axis("off")
     table = ax.table(
         cellText=rows,
-        colLabels=["condition"] + keys,
+        colLabels=["parameter"] + conditions,
         loc="center",
         cellLoc="center",
     )

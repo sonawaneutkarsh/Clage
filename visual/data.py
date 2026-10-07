@@ -9,6 +9,7 @@ logic by construction.
 from __future__ import annotations
 
 import json
+import math
 import statistics
 from pathlib import Path
 from typing import Any, Dict, List
@@ -50,6 +51,10 @@ def load_recording(path) -> Dict[str, Any]:
     recording = json.loads(Path(path).read_text())
     if recording.get("schema") != "clage-generation-replay":
         raise ValueError(f"{path}: not a clage generation recording")
+    if recording.get("version") not in (1, 2) or not recording.get("ticks"):
+        raise ValueError("unsupported or empty generation recording")
+    if recording["version"] == 1:
+        recording["fitness_phase"] = "stored_unverified"
     return recording
 
 
@@ -83,12 +88,28 @@ def condition_names(exp_dir) -> List[str]:
     )
 
 
+def validate_trials(trials, metrics) -> None:
+    """Reject incomparable or corrupt trials before calculating statistics."""
+    if not trials or not trials[0]:
+        raise ValueError("trials must be nonempty")
+    for trial in trials:
+        if len(trial) != len(trials[0]):
+            raise ValueError("trials must have equal generation counts")
+        for generation, row in enumerate(trial, 1):
+            if row.get("generation") != generation:
+                raise ValueError("generations must be sequential and one-based")
+            for metric in metrics:
+                value = row.get(metric)
+                if (isinstance(value, bool) or not isinstance(value, (int, float))
+                        or not math.isfinite(value)):
+                    raise ValueError(f"invalid metric {metric} at generation {generation}")
+
+
 def aggregate_condition(
     trials: List[List[Dict[str, Any]]],
 ) -> Dict[int, Dict[str, Dict[str, float]]]:
     """Per generation -> per metric -> {mean, std} across seeds."""
-    if not trials:
-        return {}
+    validate_trials(trials, METRICS)
     aggregated: Dict[int, Dict[str, Dict[str, float]]] = {}
     for generation in range(len(trials[0])):
         row = {}

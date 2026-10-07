@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 
 from .layout import layered_layout
 
@@ -34,21 +35,29 @@ def draw_genome(ax, genome: Dict[str, Any]) -> None:
         if conn["enabled"]:
             color = "#d62728" if conn["weight"] >= 0 else "#1f77b4"
             alpha = min(1.0, abs(conn["weight"]) / 3.0 + 0.15)
-            ax.plot([x0, x1], [y0, y1], color=color, alpha=alpha, linewidth=1.2)
+            ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
+                        arrowprops={"arrowstyle": "->", "color": color, "alpha": alpha,
+                                    "shrinkA": 13, "shrinkB": 13})
         else:
             ax.plot([x0, x1], [y0, y1], color="0.6", linestyle="--", linewidth=0.8)
 
     for node_id, node in nodes.items():
         x, y = positions[node_id]
-        ax.scatter([x], [y], s=900, color=_node_color(node["type"]), zorder=3)
+        ax.scatter([x], [y], s=500, color=_node_color(node["type"]), zorder=3)
         ax.text(x, y, f"{node_id}", ha="center", va="center", fontsize=8, color="white", zorder=4)
-        ax.text(x, y - 0.14, f"b={node['bias']:.2f}", ha="center", va="center", fontsize=6, zorder=4)
+        ax.text(x, y - 0.3, f"b={node['bias']:.2f}", ha="center", va="center", fontsize=7, zorder=4)
 
     ax.set_xlim(-0.6, max(p[0] for p in positions.values()) + 0.6)
     ax.set_ylim(-(max(p[1] for p in positions.values()) + 1.2),
                 max(p[1] for p in positions.values()) + 1.2)
     ax.set_aspect("equal")
     ax.axis("off")
+    ax.legend(handles=[Line2D([], [], color="#d62728", label="positive weight"),
+                       Line2D([], [], color="#1f77b4", label="negative weight"),
+                       Line2D([], [], color="0.6", linestyle="--", label="disabled")],
+              loc="upper center", fontsize=7, ncol=3)
+    if not any(edge["enabled"] for edge in genome["connections"]):
+        ax.set_title("Unwired: outputs depend only on node biases", fontsize=9)
 
 
 def genome_figure(genome: Dict[str, Any], title: Optional[str] = None) -> plt.Figure:

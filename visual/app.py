@@ -12,6 +12,7 @@ replay; any `--export` renders headless output.
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 from typing import List, Optional
 
 
@@ -79,9 +80,11 @@ def _cmd_network(args: argparse.Namespace) -> None:
     if args.organism not in genomes:
         raise SystemExit(f"organism {args.organism} is not in this recording's genomes")
     genome = genomes[args.organism]
-    fig = genome_figure(genome, title=f"genome {args.organism} (fitness {genome['fitness']:.3f})")
+    phase = recording.get("fitness_phase", "stored_unverified")
+    fig = genome_figure(genome, title=f"genome {args.organism} ({phase} fitness {genome['fitness']:.3f})")
 
     if args.export:
+        Path(args.export).parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(args.export, dpi=110)
         print(f"wrote {args.export}")
         return
@@ -118,7 +121,8 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     network = sub.add_parser("network", help="inspect a genome's network topology")
     network.add_argument("--recording", required=True)
-    network.add_argument("--organism", type=int, required=True, help="genome id in the recording")
+    network.add_argument("--genome", "--organism", dest="organism", type=int, required=True,
+                         help="genome id in the recording (--organism is a legacy alias)")
     network.add_argument("--export", default=None, help="PNG path for headless export")
     network.set_defaults(func=_cmd_network)
 

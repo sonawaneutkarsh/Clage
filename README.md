@@ -35,7 +35,7 @@ python3 -m venv .venv
 all research-platform features are complete. One active run; replay is not a
 resumable checkpoint. Recording retains at most 600 frames / 16 MiB encoded JSON.
 Default Studio initialization is explicitly `dense-random-v1`, not the historical
-unwired `minimal-v1`. Engine package version remains 0.3.0.
+unwired `minimal-v1`. Reconciled engine version is 0.4.1; see `CLAGE_RECONCILIATION_REPORT.md`.
 
 [User/API/developer guide](docs/studio/GUIDE.md) ·
 [Architecture](CLAGE_STUDIO_ARCHITECTURE.md) ·
@@ -81,12 +81,11 @@ tick marks = facing.*
 
 What this does and does not show:
 
-- The three conditions separate cleanly and consistently: more food gives fitter
-  populations, more foraging, and more in-world reproduction.
+- These historical aggregates describe environmental differences, not a proven
+  cross-seed separation or evidence of learned foraging.
 - It is **not** a learning curve. Each generation reseeds the world, and over the
-  shipped 25 generations best fitness is flat within noise. In a longer run
-  (generations raised to 100, not a shipped config) the control's mean fitness rose
-  from 5.1 (generations 1–10) to 7.1 (91–100), which is a modest trend.
+  shipped 25 generations these plots do not establish generalizable learning.
+  The earlier unarchived 100-generation anecdote is not reproducible evidence.
 - Evolved networks stay small (the champion has a few connections), and in every condition
   almost no organism survives the full 300 ticks.
 
