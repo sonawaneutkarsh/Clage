@@ -41,6 +41,9 @@ class Organism:
         self.alive = True
         self.offspring = 0
         self.previous_action: Optional[int] = None
+        self.parent: Optional[Organism] = None
+        self.capture_inference = False
+        self.last_inference: Optional[dict] = None
         # per-tick behavioral trace: (action, x, y, food_dx, food_dy, organism_density)
         # Mixed temporal reference within one entry: `action`, `food_dx`, `food_dy` and
         # `organism_density` all belong to the observation taken BEFORE the action of
@@ -92,7 +95,11 @@ class Organism:
         an observation must use the observation stored at the LATER index.
         """
         observation = self.observe(world, config)
-        outputs = self.network.activate(observation)
+        if self.capture_inference:
+            outputs, values = self.network.activate_with_trace(observation)
+            self.last_inference = {"inputs": observation, "outputs": outputs, "values": values}
+        else:
+            outputs = self.network.activate(observation)
         action = max(range(len(outputs)), key=lambda i: outputs[i])
         self.previous_action = action
         self._apply_action(action, world, config)
@@ -155,6 +162,8 @@ class Organism:
             facing=self.facing,
             energy=child_energy,
         )
+        child.parent = self
+        child.capture_inference = self.capture_inference
         world.place_organism(child)
         self.offspring += 1
         return child

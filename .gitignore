@@ -7,6 +7,9 @@ progress/
 clage.egg-info/
 benchmarks/plots/
 .DS_Store
+.studio-runs/
+test-results/
+playwright-report/
 .kiro/
 htmlcov/
 .coverage

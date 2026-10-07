@@ -1,0 +1,302 @@
+{
+  "schema": "clage-studio-benchmark",
+  "version": 1,
+  "machine": {
+    "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.6",
+    "processor": "arm"
+  },
+  "metadata": {
+    "engine_version": "source-checkout",
+    "commit": "2105fee258f2a329c351a4ab255fd585b3437a8a",
+    "dirty": true,
+    "studio_contract": "1.0-slice-v1",
+    "created": "2026-10-07T12:54:38.942760+00:00",
+    "fitness_definition": "world-fitness-v1: max body (3*food+.01*age+.5*offspring)",
+    "observations": [
+      "Food \u0394x",
+      "Food \u0394y",
+      "Food density",
+      "Body density",
+      "Energy",
+      "Wall proximity x",
+      "Wall proximity y",
+      "Previous MOVE",
+      "Previous EAT"
+    ],
+    "actions": [
+      "MOVE",
+      "TURN LEFT",
+      "TURN RIGHT",
+      "EAT"
+    ],
+    "checkpoint": false
+  },
+  "workloads": [
+    {
+      "population": 72,
+      "width": 40,
+      "height": 32,
+      "food": 180,
+      "recording": false,
+      "ticks": 30,
+      "seed": 42,
+      "reproduction": "disabled (threshold 2)",
+      "trials": [
+        {
+          "initialization_s": 0.02443495800253004,
+          "engine_ticks_s": 711.8957787362563,
+          "serialization_ms": 0.5344170203898102,
+          "snapshot_bytes": 46846,
+          "recording_bytes": 0,
+          "living_bodies": 72
+        },
+        {
+          "initialization_s": 0.023260165995452553,
+          "engine_ticks_s": 693.6690124006312,
+          "serialization_ms": 0.565333990380168,
+          "snapshot_bytes": 46846,
+          "recording_bytes": 0,
+          "living_bodies": 72
+        },
+        {
+          "initialization_s": 0.025603042013244703,
+          "engine_ticks_s": 665.3771950729559,
+          "serialization_ms": 0.5717909953091294,
+          "snapshot_bytes": 46846,
+          "recording_bytes": 0,
+          "living_bodies": 72
+        }
+      ],
+      "median": {
+        "initialization_s": 0.02443495800253004,
+        "engine_ticks_s": 693.6690124006312,
+        "serialization_ms": 0.565333990380168,
+        "snapshot_bytes": 46846,
+        "recording_bytes": 0,
+        "living_bodies": 72
+      }
+    },
+    {
+      "population": 72,
+      "width": 40,
+      "height": 32,
+      "food": 180,
+      "recording": true,
+      "ticks": 30,
+      "seed": 42,
+      "reproduction": "disabled (threshold 2)",
+      "trials": [
+        {
+          "initialization_s": 0.024909625004511327,
+          "engine_ticks_s": 493.0223613486948,
+          "serialization_ms": 0.5319170013535768,
+          "snapshot_bytes": 46846,
+          "recording_bytes": 1363759,
+          "living_bodies": 72
+        },
+        {
+          "initialization_s": 0.02497954200953245,
+          "engine_ticks_s": 492.77299942590696,
+          "serialization_ms": 0.5151249933987856,
+          "snapshot_bytes": 46846,
+          "recording_bytes": 1363759,
+          "living_bodies": 72
+        },
+        {
+          "initialization_s": 0.025976416014600545,
+          "engine_ticks_s": 486.5949891369343,
+          "serialization_ms": 0.5129999772179872,
+          "snapshot_bytes": 46846,
+          "recording_bytes": 1363759,
+          "living_bodies": 72
+        }
+      ],
+      "median": {
+        "initialization_s": 0.02497954200953245,
+        "engine_ticks_s": 492.77299942590696,
+        "serialization_ms": 0.5151249933987856,
+        "snapshot_bytes": 46846,
+        "recording_bytes": 1363759,
+        "living_bodies": 72
+      }
+    },
+    {
+      "population": 512,
+      "width": 80,
+      "height": 64,
+      "food": 500,
+      "recording": false,
+      "ticks": 30,
+      "seed": 42,
+      "reproduction": "disabled (threshold 2)",
+      "trials": [
+        {
+          "initialization_s": 0.2841900829807855,
+          "engine_ticks_s": 46.02439073220392,
+          "serialization_ms": 3.4417500137351453,
+          "snapshot_bytes": 332001,
+          "recording_bytes": 0,
+          "living_bodies": 512
+        },
+        {
+          "initialization_s": 0.2360711669898592,
+          "engine_ticks_s": 46.107333927677736,
+          "serialization_ms": 4.220416973112151,
+          "snapshot_bytes": 332001,
+          "recording_bytes": 0,
+          "living_bodies": 512
+        },
+        {
+          "initialization_s": 0.24139095802092925,
+          "engine_ticks_s": 47.87326987803907,
+          "serialization_ms": 3.4510830009821802,
+          "snapshot_bytes": 332001,
+          "recording_bytes": 0,
+          "living_bodies": 512
+        }
+      ],
+      "median": {
+        "initialization_s": 0.24139095802092925,
+        "engine_ticks_s": 46.107333927677736,
+        "serialization_ms": 3.4510830009821802,
+        "snapshot_bytes": 332001,
+        "recording_bytes": 0,
+        "living_bodies": 512
+      }
+    },
+    {
+      "population": 512,
+      "width": 80,
+      "height": 64,
+      "food": 500,
+      "recording": true,
+      "ticks": 30,
+      "seed": 42,
+      "reproduction": "disabled (threshold 2)",
+      "trials": [
+        {
+          "initialization_s": 0.2400617919920478,
+          "engine_ticks_s": 41.423900517259966,
+          "serialization_ms": 3.301207994809374,
+          "snapshot_bytes": 332001,
+          "recording_bytes": 9725298,
+          "living_bodies": 512
+        },
+        {
+          "initialization_s": 0.2401758749911096,
+          "engine_ticks_s": 40.54008172403743,
+          "serialization_ms": 3.3153329859487712,
+          "snapshot_bytes": 332001,
+          "recording_bytes": 9725298,
+          "living_bodies": 512
+        },
+        {
+          "initialization_s": 0.23869283302337863,
+          "engine_ticks_s": 40.44117956753437,
+          "serialization_ms": 3.4402089950162917,
+          "snapshot_bytes": 332001,
+          "recording_bytes": 9725298,
+          "living_bodies": 512
+        }
+      ],
+      "median": {
+        "initialization_s": 0.2400617919920478,
+        "engine_ticks_s": 40.54008172403743,
+        "serialization_ms": 3.3153329859487712,
+        "snapshot_bytes": 332001,
+        "recording_bytes": 9725298,
+        "living_bodies": 512
+      }
+    },
+    {
+      "population": 1000,
+      "width": 96,
+      "height": 96,
+      "food": 900,
+      "recording": false,
+      "ticks": 30,
+      "seed": 42,
+      "reproduction": "disabled (threshold 2)",
+      "trials": [
+        {
+          "initialization_s": 0.6968294169928413,
+          "engine_ticks_s": 16.113527682893938,
+          "serialization_ms": 7.136165979318321,
+          "snapshot_bytes": 689964,
+          "recording_bytes": 0,
+          "living_bodies": 1000
+        },
+        {
+          "initialization_s": 0.7139126249821857,
+          "engine_ticks_s": 15.976785015719903,
+          "serialization_ms": 7.271917012985796,
+          "snapshot_bytes": 689964,
+          "recording_bytes": 0,
+          "living_bodies": 1000
+        },
+        {
+          "initialization_s": 0.7364499170216732,
+          "engine_ticks_s": 16.101106714916792,
+          "serialization_ms": 7.301916979486123,
+          "snapshot_bytes": 689964,
+          "recording_bytes": 0,
+          "living_bodies": 1000
+        }
+      ],
+      "median": {
+        "initialization_s": 0.7139126249821857,
+        "engine_ticks_s": 16.101106714916792,
+        "serialization_ms": 7.271917012985796,
+        "snapshot_bytes": 689964,
+        "recording_bytes": 0,
+        "living_bodies": 1000
+      }
+    },
+    {
+      "population": 1000,
+      "width": 96,
+      "height": 96,
+      "food": 900,
+      "recording": true,
+      "ticks": 30,
+      "seed": 42,
+      "reproduction": "disabled (threshold 2)",
+      "trials": [
+        {
+          "initialization_s": 0.7364264579955488,
+          "engine_ticks_s": 14.507170856565546,
+          "serialization_ms": 7.0954580151010305,
+          "snapshot_bytes": 689964,
+          "recording_bytes": 16191261,
+          "living_bodies": 1000
+        },
+        {
+          "initialization_s": 0.7178837500105146,
+          "engine_ticks_s": 14.429969023051678,
+          "serialization_ms": 6.995083997026086,
+          "snapshot_bytes": 689964,
+          "recording_bytes": 16191261,
+          "living_bodies": 1000
+        },
+        {
+          "initialization_s": 0.7635574160085525,
+          "engine_ticks_s": 14.481537427654551,
+          "serialization_ms": 7.10687501123175,
+          "snapshot_bytes": 689964,
+          "recording_bytes": 16191261,
+          "living_bodies": 1000
+        }
+      ],
+      "median": {
+        "initialization_s": 0.7364264579955488,
+        "engine_ticks_s": 14.481537427654551,
+        "serialization_ms": 7.0954580151010305,
+        "snapshot_bytes": 689964,
+        "recording_bytes": 16191261,
+        "living_bodies": 1000
+      }
+    }
+  ],
+  "limitations": "30-tick warm workload, no reproduction, no evolution boundary. Includes inference telemetry/capture; recording disabled still produces the current live snapshot. Not a long-duration memory or browser benchmark."
+}

@@ -105,6 +105,11 @@ class Network:
 
     def activate(self, inputs: Sequence[float]) -> List[float]:
         """Run one forward pass. ``inputs`` length must match the input nodes."""
+        outputs, _ = self.activate_with_trace(inputs)
+        return outputs
+
+    def activate_with_trace(self, inputs: Sequence[float]) -> Tuple[List[float], Dict[int, float]]:
+        """Return outputs and node values from the same actual forward pass."""
         if len(inputs) != len(self._input_ids):
             raise ValueError(
                 f"expected {len(self._input_ids)} inputs, got {len(inputs)}"
@@ -122,7 +127,7 @@ class Network:
                 total += values[source] * weight
             values[nid] = ACTIVATION(total)
 
-        return [values[nid] for nid in self._output_ids]
+        return [values[nid] for nid in self._output_ids], values
 
     # ------------------------------------------------------------------ dunder
 

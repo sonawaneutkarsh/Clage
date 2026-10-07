@@ -1,0 +1,7 @@
+{
+  "name": "clage-studio",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test tests/studio-math.test.js", "test:e2e": "playwright test" },
+  "devDependencies": { "@playwright/test": "^1.58.0" }
+}
