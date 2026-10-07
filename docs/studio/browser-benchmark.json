@@ -1,0 +1,62 @@
+{
+  "schema": "clage-render-benchmark",
+  "version": 1,
+  "browser": "chromium",
+  "viewport": "1440x1100",
+  "frames_per_workload": 120,
+  "limitations": "Headless Chromium RAF and draw CPU timing on this machine. Paused snapshots, no inference/stream load or density layer. Not a GPU/browser-wide scalability guarantee.",
+  "results": [
+    {
+      "population": 72,
+      "world": "96x96",
+      "food": 900,
+      "layer": "genome",
+      "grid": false,
+      "camera": "fit",
+      "paused": true,
+      "fps": 60.0030001500075,
+      "p95_frame_ms": 16.799999999999727,
+      "mean_draw_ms": 0.27,
+      "painted_pixels": 148610
+    },
+    {
+      "population": 512,
+      "world": "96x96",
+      "food": 900,
+      "layer": "genome",
+      "grid": false,
+      "camera": "fit",
+      "paused": true,
+      "fps": 60.003000150007495,
+      "p95_frame_ms": 16.799999999999955,
+      "mean_draw_ms": 0.51,
+      "painted_pixels": 148610
+    },
+    {
+      "population": 1000,
+      "world": "96x96",
+      "food": 900,
+      "layer": "genome",
+      "grid": false,
+      "camera": "fit",
+      "paused": true,
+      "fps": 60.003000150007495,
+      "p95_frame_ms": 16.700000000000273,
+      "mean_draw_ms": 0.913,
+      "painted_pixels": 148610
+    },
+    {
+      "population": 2000,
+      "world": "96x96",
+      "food": 900,
+      "layer": "genome",
+      "grid": false,
+      "camera": "fit",
+      "paused": true,
+      "fps": 59.01736094034328,
+      "p95_frame_ms": 16.800000000000182,
+      "mean_draw_ms": 1.612,
+      "painted_pixels": 148610
+    }
+  ]
+}

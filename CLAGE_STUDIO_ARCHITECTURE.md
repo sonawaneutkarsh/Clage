@@ -67,11 +67,71 @@ has an explicit budget and exports declare missing earlier frames. Imports are
 validated. Seeking plays recorded states only. No branch/resume/checkpoint UI:
 RNG, species, innovation and evolutionary population state are not checkpointed.
 
+## ADR 004: indexed world without stochastic drift
+
+World mutation methods maintain empty-cell row counts and food spatial buckets.
+Empty sampling maps the same RNG rank to the same row-major cell as the old scan;
+nearest-food ties preserve the original set iteration ordering. Body networks are
+shared within an immutable genotype cohort. Randomized parity tests cover these
+contracts. Direct mutation of `world.cells` or `world.food` bypasses indexes and is
+unsupported; use placement/removal/movement methods. No parallel stochastic
+engine execution or approximation was introduced.
+
+## ADR 005: two independent ancestries
+
+Optional passive Population logging records actual selected genome objects for
+elite/clone/crossover/champion-copy/rescue events. Studio maps them to scoped
+`generation:index` identities. Mutation records describe net changes between the
+pre/post-mutation child, not every operator invocation. Logging does not consume
+RNG draws; full-genotype and RNG-state parity tests exercise normal and stagnant
+evolution. Studio replay v2 adds `clage-evolution-lineage-v1`; v1 remains readable
+without fabricated ancestors. Within-world body parent IDs remain separate.
+
+## System boundaries and persistence
+
+```
+neat + world → WorldSession → Experiment → locked Manager
+                                         ↓
+                              FastAPI HTTP + WebSocket
+                                         ↓
+                         ES modules / Canvas / SVG / charts
+                                         ↓
+                         validated JSON/gzip local artifacts
+```
+
+Live snapshots include current body state/last actual inference; topology and
+evolutionary provenance use separate endpoints. Streaming is capped at 10 Hz;
+unchanged snapshots are suppressed with two-second heartbeats. Encoding and
+replay validation run off the async event loop. A worker thread prevents blocking
+the UI, but the Python GIL and lock still limit throughput; this is not a job queue.
+
+Frame retention is capped at 600 frames and 16 MiB **encoded JSON**, not total
+Python heap. Portable uploads/decompressed files are limited to 24 MiB; exports
+can trim a recorded prefix further and disclose that trimming. A conservative
+50,000-body safety check pauses before a potentially oversized tick. Genomes are
+bounded by 10,000 founder evaluations. Local saves use atomic gzip file replacement
+and opaque IDs in `.studio-runs/` (or `CLAGE_ARTIFACTS`). Settings remain frozen.
+Software provenance resolves the source checkout, not the caller's working
+directory; packaged code without its own Git root reports an unknown commit.
+
+Default server binds only `127.0.0.1`. Trusted Host, same-origin write/stream
+checks and self-only asset CSP reduce accidental browser exposure. It is not an
+authenticated multi-user service and must not be exposed publicly as-is.
+
+## Recovery follow-up — October 7, 2026
+
+Remote `ls-remote` found no supplied audit branch. Fetching the exact alleged
+`bec8c03a02242d2effdeb6e553c3fdf05c1931ce` returned `not our ref`. This does not
+prove that another local workspace never existed; it precisely limits what this
+checkout/origin can recover. The missing audit branch cannot be pushed or made
+into a reviewable PR from these objects. Studio is committed on its separate
+branch; local default branch and existing ignored results remain untouched.
+
 ## Scientific contracts
 
 Preserve minimal unwired initialization; name Studio's seeded dense-random
 initialization separately. Fitness remains `3*food + .01*age + .5*offspring`,
 max over bodies sharing a genome. Live scores are provisional. Parentage denotes
-within-world asexual reproduction, never evolutionary genome ancestry. Species
+within-world asexual reproduction; evolutionary parentage is a separate v2 table. Species
 are known after evaluation. Activations are the actual last inference from
 pre-action observations, not a recalculation from post-action state.

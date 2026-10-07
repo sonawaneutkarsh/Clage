@@ -2,16 +2,55 @@
 
 [![CI](https://github.com/sonawaneutkarsh/Clage/actions/workflows/ci.yml/badge.svg)](https://github.com/sonawaneutkarsh/Clage/actions/workflows/ci.yml)
 
-A from-scratch NEAT (NeuroEvolution of Augmenting Topologies) engine dropped into a
-2D grid world, where organisms controlled by evolved networks move, eat, and
-reproduce. Around it: controlled benchmarks, seeded one-factor experiments,
-behavioral metrics, a terminal/matplotlib viewer, and 300 tests. Pure Python;
-the only runtime dependency is matplotlib. Built in 2026.
+A from-scratch NEAT (NeuroEvolution of Augmenting Topologies) engine in a 2D world
+where neural organisms move, eat and reproduce. **Clage Studio** adds a local-first
+browser observatory: real-time Canvas rendering, instrumented neural inspection,
+evolutionary ancestry, experiment controls, analytics and validated replay.
+The original Python engine, seeded experiments and terminal/matplotlib viewers
+remain independently usable. No cloud account, API key or frontend build needed.
 
-## Results
+<img src="docs/studio/ecosystem.png" width="1100" alt="Clage Studio dark-mode ecosystem, organism inspector, playback controls and live charts">
 
-All numbers below come from the commands in this README, run on the current
-`main` (5 seeds each, fully deterministic).
+## Start Clage Studio
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev,studio]"
+.venv/bin/python -m studio
+# Open http://127.0.0.1:8765 — starts paused. Click Resume.
+```
+
+- **Ecosystem:** zoom/pan/follow, six layers, direction markers, event pulses,
+  live statistics, charts and distributions. Simulation ticks and render FPS are separate.
+- **Neural atlas:** actual pre-action inputs/activations, weights, biases, enabled
+  genes, semantic labels, node/edge inspection and side-by-side genome comparison.
+- **Evolution:** evaluated generation summaries, champions, recorded evolutionary
+  parents/net mutation deltas, and a separate within-world organism lineage.
+- **Laboratory:** frozen validated settings, browser presets, seeded held-out
+  policy evaluation and persistent local artifacts.
+- **Replay/export:** bounded JSON/gzip archives, seeking, generation navigation,
+  synchronized second-replay view, metrics CSV, chart/world PNG and champion JSON.
+
+**Scope:** a substantial tested Studio release candidate, not a declaration that
+all research-platform features are complete. One active run; replay is not a
+resumable checkpoint. Recording retains at most 600 frames / 16 MiB encoded JSON.
+Default Studio initialization is explicitly `dense-random-v1`, not the historical
+unwired `minimal-v1`. Engine package version remains 0.3.0.
+
+[User/API/developer guide](docs/studio/GUIDE.md) ·
+[Architecture](CLAGE_STUDIO_ARCHITECTURE.md) ·
+[Implementation](CLAGE_STUDIO_IMPLEMENTATION_REPORT.md) ·
+[Tests](CLAGE_STUDIO_TEST_REPORT.md) ·
+[Performance](CLAGE_STUDIO_PERFORMANCE_REPORT.md) ·
+[Scientific definitions](CLAGE_STUDIO_RESEARCH_NOTES.md) ·
+[Remaining work](CLAGE_STUDIO_REMAINING_WORK.md)
+
+## Historical Results
+
+The following tables and interpretations are preserved from the pre-Studio
+README at `2105fee` (five seeds each). These scientific experiments were **not
+rerun during Studio development**. They are not results of the new dense-random
+Studio initialization. Keep their original configurations and definitions separate.
 
 **Engine validation** (`python -m benchmarks.run --problems or,and,xor,sin --trials 5 --generations 300`):
 
@@ -55,13 +94,30 @@ What this does and does not show:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -e ".[dev]"   # matplotlib + pytest, pytest-cov, ruff, mypy
-.venv/bin/pytest                     # 300 tests
+.venv/bin/pip install -e ".[dev]"   # original engine/viewers; Studio is optional
+.venv/bin/pytest                     # optional Studio API tests skip without its extras
 .venv/bin/pytest --cov=neat --cov=world --cov=diversity --cov=experiments   # optional coverage
 ```
 
-Requires Python 3.10+. CI runs ruff, mypy and the full test suite on Python 3.10 and
-3.12 for every push to `main` and every pull request.
+Requires Python 3.10+. With `.[dev,studio]` installed, the local suite has **350
+passing Python tests**; Node has four unit tests and Playwright seven browser
+workflows. CI is configured for Python 3.10/3.12 and a separate Chromium job;
+the updated remote workflow has not been executed in this delivery.
+
+```bash
+python -m pytest -o addopts='' -q
+python -m ruff check .
+python -m mypy neat world diversity experiments benchmarks visual studio
+npm ci
+npx playwright install chromium
+npm test
+npm run test:e2e
+```
+
+Node is needed only for frontend testing, not for running Studio. Local validation
+used Python 3.13.6 and headless Chromium on macOS; see the test report for coverage
+and portability limitations. The engine/viewers only require matplotlib at runtime;
+Studio adds FastAPI/Uvicorn/Pydantic and its API test dependency.
 
 Note: the packages are installed as top-level modules (`neat`, `world`, ...), so use
 a dedicated virtual environment. `neat` would clash with `neat-python`.
@@ -216,8 +272,10 @@ diversity/     behavioral metrics (action entropy, transition entropy, coverage,
                food alignment, behavioral diversity index)
 visual/        pure-data viewer: world replay, condition-comparison analytics,
                neural-network inspector (no evolutionary logic)
+studio/        optional local API, incremental orchestration, replay contracts,
+               browser assets, held-out evaluation and reproduction tools
 benchmarks/    NEAT validation suite (OR / AND / XOR / sin)
-tests/         300 tests (pytest)
-docs/          correctness notes and README images
+tests/         Python tests, browser workflows and pure-JS tests
+docs/          correctness notes, Studio guide, screenshots and measured workloads
 results/       experiment and benchmark output (gitignored)
 ```
