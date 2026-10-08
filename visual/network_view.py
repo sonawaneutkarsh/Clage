@@ -64,7 +64,7 @@ def draw_genome(ax, genome: Dict[str, Any]) -> None:
 def genome_figure(genome: Dict[str, Any], title: Optional[str] = None) -> plt.Figure:
     """Return a standalone figure of the genome's network."""
     positions = layered_layout(genome)
-    layer_counts = {}
+    layer_counts: Dict[float, int] = {}
     for x, _ in positions.values():
         layer_counts[x] = layer_counts.get(x, 0) + 1
     height = max(4, max(layer_counts.values(), default=1) * 0.55 + 1)
