@@ -259,9 +259,13 @@ def run_experiment(
             digest.update(str(path.relative_to(source)).encode())
             digest.update(path.read_bytes())
     try:
+        repository = subprocess.check_output(["git", "-C", str(source), "rev-parse", "--show-toplevel"],
+                                             text=True, stderr=subprocess.DEVNULL).strip()
+        if Path(repository).resolve() != source.resolve():
+            raise ValueError("Installed source is not a Git repository root")
         commit = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"],
                                          text=True, stderr=subprocess.DEVNULL).strip()
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, subprocess.CalledProcessError, ValueError):
         commit = None
     root.mkdir(parents=True, exist_ok=True)
     (root / "manifest.json").write_text(json.dumps({

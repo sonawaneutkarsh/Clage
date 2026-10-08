@@ -220,6 +220,20 @@ def test_invalid_recording_budget_and_foreign_condition_write_nothing(tmp_path):
     assert not target.exists()
 
 
+def test_legacy_manifest_does_not_attribute_an_unrelated_git_parent(tmp_path, monkeypatch):
+    import experiments.run as runner
+    experiment, config = tiny_config(tmp_path)
+    monkeypatch.setattr(runner, "__file__", str(tmp_path / "installed/experiments/run.py"))
+    def git_output(command, **kwargs):
+        assert command[-1] == "--show-toplevel"
+        return str(tmp_path / "unrelated") + "\n"
+    monkeypatch.setattr(runner.subprocess, "check_output", git_output)
+    target = tmp_path / "runs"
+    run_experiment(config, target, conditions=["control"])
+    manifest = json.loads((target / experiment.name / "manifest.json").read_text())
+    assert manifest["source_commit"] is None
+
+
 @pytest.mark.parametrize("generations", [0, -1, True, 1.5])
 def test_experiment_generations_reject_before_write(generations):
     with pytest.raises(ValueError, match="generations"):
