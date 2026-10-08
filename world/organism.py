@@ -29,9 +29,10 @@ class Organism:
         config: EnvironmentConfig,
         facing: Tuple[int, int] = Direction.NORTH,
         energy: Optional[float] = None,
+        network: Optional[Network] = None,
     ) -> None:
         self.genome = genome
-        self.network = Network(genome)
+        self.network = network if network is not None else Network(genome)
         self.x = x
         self.y = y
         self.facing = facing
@@ -41,6 +42,9 @@ class Organism:
         self.alive = True
         self.offspring = 0
         self.previous_action: Optional[int] = None
+        self.parent: Optional[Organism] = None
+        self.capture_inference = False
+        self.last_inference: Optional[dict] = None
         # per-tick behavioral trace: (action, x, y, food_dx, food_dy, organism_density)
         # Mixed temporal reference within one entry: `action`, `food_dx`, `food_dy` and
         # `organism_density` all belong to the observation taken BEFORE the action of
@@ -63,8 +67,8 @@ class Organism:
             dx_food = max(-1.0, min(1.0, (nearest[0] - self.x) / radius))
             dy_food = max(-1.0, min(1.0, (nearest[1] - self.y) / radius))
 
-        half_x = max(1, world.width // 2 - 1)
-        half_y = max(1, world.height // 2 - 1)
+        half_x = max(1, (world.width - 1) // 2)
+        half_y = max(1, (world.height - 1) // 2)
         # boundary proximity: 1.0 at the wall, 0.0 toward the center
         boundary_x = 1.0 - min(self.x, world.width - 1 - self.x) / half_x
         boundary_y = 1.0 - min(self.y, world.height - 1 - self.y) / half_y
@@ -92,7 +96,11 @@ class Organism:
         an observation must use the observation stored at the LATER index.
         """
         observation = self.observe(world, config)
-        outputs = self.network.activate(observation)
+        if self.capture_inference:
+            outputs, values = self.network.activate_with_trace(observation)
+            self.last_inference = {"inputs": observation, "outputs": outputs, "values": values}
+        else:
+            outputs = self.network.activate(observation)
         action = max(range(len(outputs)), key=lambda i: outputs[i])
         self.previous_action = action
         self._apply_action(action, world, config)
@@ -154,7 +162,14 @@ class Organism:
             config=config,
             facing=self.facing,
             energy=child_energy,
+            network=self.network,
         )
+        child.parent = self
+        child.capture_inference = self.capture_inference
         world.place_organism(child)
         self.offspring += 1
+        for organism in (self, child):
+            if organism.energy <= 0:
+                organism.alive = False
+                world.remove_organism(organism)
         return child

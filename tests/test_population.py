@@ -29,7 +29,7 @@ def wired_b():
     g = Genome.minimal(input_ids=[0, 1], output_ids=[10, 11])
     g.add_connection(ConnectionGene(0, 10, 1.0, innovation=1))
     g.add_connection(ConnectionGene(0, 11, 3.0, innovation=3))
-    g.add_connection(ConnectionGene(1, 10, 4.0, innovation=4))
+    g.add_connection(ConnectionGene(1, 10, 4.0, innovation=2))
     return g
 
 

@@ -89,6 +89,9 @@ def write_report(
     plot_dir: Optional[Path] = None,
 ) -> None:
     """Write a markdown report summarizing all conditions vs the control."""
+    manifest = Path(exp_dir) / "manifest.json"
+    if manifest.exists():
+        control = json.loads(manifest.read_text())["control"]
     exp_dir = Path(exp_dir)
     conditions = condition_names(exp_dir)
     sections = ["# Experiment Report\n", f"Conditions: {', '.join(conditions)}\n"]

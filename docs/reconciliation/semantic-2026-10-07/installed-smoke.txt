@@ -1,0 +1,26 @@
+wrote /private/tmp/clage-semantic-legacy-world.png
+wrote /private/tmp/clage-semantic-legacy-network.png
+{
+  "version": "0.4.1",
+  "installed_from": "/private/tmp/clage-semantic-delivery-d052-install",
+  "configs": [
+    "available_space.json",
+    "base.json",
+    "food_abundance.json",
+    "food_regeneration.json",
+    "population_density.json",
+    "reproduction_cost.json"
+  ],
+  "assets": 4,
+  "http_smoke": "static/OpenAPI/run/step/JSON/gzip export",
+  "reproduction": {
+    "recorded_frames_verified": 18,
+    "last_sequence": 17,
+    "method": "rerun from frozen config/seed, NOT resume from replay",
+    "source_commit": null,
+    "current_commit": null,
+    "source_sha256": "6e88409b30cea036796bf877af0c1d65ef3ac1c7776015a1f914de5f70f46038",
+    "current_source_sha256": "6e88409b30cea036796bf877af0c1d65ef3ac1c7776015a1f914de5f70f46038",
+    "current_dirty": null
+  }
+}

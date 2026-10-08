@@ -34,7 +34,7 @@ __all__ = [
     "network_ascii_lines",
 ]
 
-FOOD_GLYPH = "🟢"
+FOOD_GLYPH = "+"
 EMPTY_GLYPH = "·"
 ORGANISM_GLYPH = "●"
 
@@ -75,6 +75,7 @@ def world_grid_lines(
     recording: Dict[str, Any],
     tick_index: int,
     color: bool = False,
+    cursor: Optional[Tuple[int, int]] = None,
 ) -> List[str]:
     """Downscale the world to a coarse character grid and render it."""
     config = recording["config"]
@@ -96,10 +97,12 @@ def world_grid_lines(
             cells[cy][cx] = ("food", None)
 
     lines: List[str] = []
-    for row in cells:
+    for cy, row in enumerate(cells):
         parts: List[str] = []
-        for cell in row:
-            if cell is None:
+        for cx, cell in enumerate(row):
+            if cursor == (cx, cy):
+                parts.append("×")
+            elif cell is None:
                 parts.append(EMPTY_GLYPH)
             elif cell[0] == "food":
                 parts.append(FOOD_GLYPH)
@@ -136,7 +139,8 @@ def _organism_info_lines(
         return ["Selected organism is gone"]
     energy_pct = organism["energy"] / recording["config"]["max_energy"] * 100
     return [
-        f"Energy:   {energy_pct:5.0f}",
+        f"Body:     {organism['id']}",
+        f"Energy:   {energy_pct:5.0f}%",
         f"Age:      {organism['age']}",
         f"Food:     {organism['food_eaten']}",
         f"Offspring:{organism['offspring']}",
@@ -239,11 +243,12 @@ def render_frame(
     tick_index: int,
     selected: Optional[int] = None,
     color: bool = False,
+    cursor: Optional[Tuple[int, int]] = None,
 ) -> str:
     """Render the boxed layout for one tick as a string."""
     tick = recording["ticks"][tick_index]
 
-    left = world_grid_lines(recording, tick_index, color)
+    left = world_grid_lines(recording, tick_index, color, cursor)
     right = _right_panel_lines(recording, tick_index, selected, color)
 
     left_width = max(_visible_width(line) for line in left)
@@ -266,7 +271,8 @@ def render_frame(
         avg_fitness = "—"
 
     footer1 = f" Generation: {generation}   Population: {population}   Species: {species}"
-    footer2 = f" Survival: {survival}   Avg Fitness: {avg_fitness}   Tick: {tick_index}/{len(recording['ticks']) - 1}"
+    phase = recording.get("fitness_phase", "stored_unverified")
+    footer2 = f" Survival: {survival}   Final Fitness ({phase}): {avg_fitness}   Tick: {tick_index}/{len(recording['ticks']) - 1}"
     inner = max(len(_visible(header)) + 1, left_width + 1 + 34, len(footer1), len(footer2))
     right_width = inner - left_width - 1
 
@@ -302,12 +308,22 @@ def play(recording: Dict[str, Any], fps: float = 10.0) -> None:
     import select
     import termios
     import tty
+    import os
+
+    if not math.isfinite(fps) or fps <= 0:
+        raise ValueError("fps must be finite and positive")
 
     ticks = recording["ticks"]
     tick = 0
     playing = True
     selected: Optional[int] = None
     cursor = (0, 0)
+    config = recording["config"]
+    scale = max(1, math.ceil(max(config["width"], config["height"]) / WORLD_MAX_DIM))
+    cursor_width = math.ceil(config["width"] / scale)
+    cursor_height = math.ceil(config["height"] / scale)
+    pending = b""
+    previous_frame = None
 
     def find_organism(cx: int, cy: int) -> Optional[int]:
         config = recording["config"]
@@ -325,24 +341,33 @@ def play(recording: Dict[str, Any], fps: float = 10.0) -> None:
     try:
         while True:
             while select.select([sys.stdin], [], [], 0)[0]:
-                ch = sys.stdin.read(1)
+                data = os.read(sys.stdin.fileno(), 4096)
+                if not data:
+                    return
+                pending += data
+            while pending:
+                if pending.startswith(b"\x1b") and len(pending) < 3:
+                    break
+                ch = chr(pending[0])
+                pending = pending[1:]
                 if ch == "\x1b":
-                    rest = sys.stdin.read(2)
+                    rest = pending[:2].decode("ascii", errors="replace")
+                    pending = pending[2:]
                     key = ch + rest
                     if key == "\x1b[A":
                         cursor = (cursor[0], max(0, cursor[1] - 1))
                     elif key == "\x1b[B":
-                        cursor = (cursor[0], cursor[1] + 1)
+                        cursor = (cursor[0], min(cursor_height - 1, cursor[1] + 1))
                     elif key == "\x1b[C":
-                        cursor = (min(WORLD_MAX_DIM - 1, cursor[0] + 1), cursor[1])
+                        cursor = (min(cursor_width - 1, cursor[0] + 1), cursor[1])
                     elif key == "\x1b[D":
                         cursor = (max(0, cursor[0] - 1), cursor[1])
                 elif ch in "wasd":
                     dx = {"d": 1, "a": -1}.get(ch, 0)
                     dy = {"s": 1, "w": -1}.get(ch, 0)
                     cursor = (
-                        min(WORLD_MAX_DIM - 1, max(0, cursor[0] + dx)),
-                        min(WORLD_MAX_DIM - 1, max(0, cursor[1] + dy)),
+                        min(cursor_width - 1, max(0, cursor[0] + dx)),
+                        min(cursor_height - 1, max(0, cursor[1] + dy)),
                     )
                 elif ch in "\r\n":
                     selected = find_organism(cursor[0], cursor[1])
@@ -351,12 +376,16 @@ def play(recording: Dict[str, Any], fps: float = 10.0) -> None:
                 elif ch in "qQ":
                     return
 
+            frame = render_frame(recording, tick, selected, color=True, cursor=cursor)
+            if frame != previous_frame:
+                sys.stdout.write("\x1b[H\x1b[J" + frame + "\n")
+                sys.stdout.flush()
+                previous_frame = frame
             if playing:
-                tick = (tick + 1) % len(ticks)
-
-            frame = render_frame(recording, tick, selected, color=True)
-            sys.stdout.write("\x1b[H\x1b[J" + frame + "\n")
-            sys.stdout.flush()
+                if tick < len(ticks) - 1:
+                    tick += 1
+                else:
+                    playing = False
             time.sleep(1.0 / fps)
     finally:
         termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, old)

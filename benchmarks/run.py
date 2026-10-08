@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from neat.population import Population
+from neat.population import Population, _require_int_at_least
 
 from .problems import PROBLEMS, Problem
 
@@ -68,6 +68,8 @@ def run_trial(
     max_generations: int = DEFAULT_MAX_GENERATIONS,
 ) -> TrialResult:
     """One independent, seeded run of ``problem`` with engine-default settings."""
+    _require_int_at_least("benchmark", "max_generations", max_generations, 1)
+    _require_int_at_least("benchmark", "population_size", population_size, 1)
     population = Population(
         problem.fitness_fn,
         population_size=population_size,
@@ -128,6 +130,7 @@ def run_benchmark(
     max_generations: int = DEFAULT_MAX_GENERATIONS,
 ) -> List[TrialResult]:
     """Run ``trials`` independent seeded trials of ``problem``."""
+    _require_int_at_least("benchmark", "trials", trials, 1)
     return [
         run_trial(
             problem,
@@ -161,6 +164,10 @@ def main(argv: Optional[List[str]] = None) -> None:
     from .report import markdown_report, print_trial_table
 
     names = [name.strip().lower() for name in args.problems.split(",")]
+    if any(name not in PROBLEMS for name in names):
+        parser.error(f"problems must be drawn from {sorted(PROBLEMS)}")
+    if args.trials < 1 or args.generations < 1:
+        parser.error("trials and generations must be positive")
     results_by_problem = {}
     diagnoses = {}
 

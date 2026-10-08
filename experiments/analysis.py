@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from .run import RECORD_FIELDS
+from visual.data import validate_trials
 
 __all__ = [
     "NUMERIC_METRICS",
@@ -62,8 +63,7 @@ def _stats(values: List[float]) -> Dict[str, float]:
 
 def aggregate(trials: List[List[Dict[str, Any]]]) -> Dict[int, Dict[str, Dict[str, float]]]:
     """Per generation -> per metric -> {mean, std, min, max} across seeds."""
-    if not trials:
-        return {}
+    validate_trials(trials, NUMERIC_METRICS)
     aggregated: Dict[int, Dict[str, Dict[str, float]]] = {}
     n_generations = len(trials[0])
     for generation in range(n_generations):

@@ -10,11 +10,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import hashlib
+import platform
+import importlib.metadata
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 from neat.genome import Genome
 from neat.population import Population
+from neat.population import _require_int_at_least
 from world import GenerationRecorder, run_generation
 
 from diversity.metrics import population_behavior
@@ -100,6 +106,9 @@ def run_trial(
     recorder_out: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """One independent seeded trial; returns one record per generation."""
+    _require_int_at_least("experiment", "generations", resolved.generations, 1)
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("seed must be an integer")
     state: Dict[str, Any] = {}
     population = Population(
         evaluator=make_tracking_evaluator(resolved, state, record_generation),
@@ -170,10 +179,27 @@ def run_condition(
     to ``<out>/<experiment>/recordings/<condition>/<seed>.json`` for replay.
     """
     condition_dir = out_dir / experiment.name / condition.name
+    experiment._validate()
+    if condition not in experiment.conditions:
+        raise ValueError("condition must belong to the validated experiment")
+    targets = [condition_dir / f"{seed}{suffix}" for seed in experiment.seeds
+               for suffix in (".json", ".config.json")]
+    if record_generation is not None:
+        targets.extend(out_dir / experiment.name / "recordings" / condition.name / f"{seed}.json"
+                       for seed in experiment.seeds)
+    if any(path.exists() for path in targets):
+        raise FileExistsError("refusing to overwrite raw experiment artifacts")
+    resolved_trials = [(seed, resolve_config(experiment, condition, seed))
+                       for seed in experiment.seeds]
+    for _, resolved in resolved_trials:
+        _require_int_at_least("experiment", "generations", resolved.generations, 1)
+    if record_generation is not None:
+        _require_int_at_least("experiment", "record_generation", record_generation, 0)
+        if any(record_generation >= resolved.generations for _, resolved in resolved_trials):
+            raise ValueError("record_generation is outside the experiment budget")
     condition_dir.mkdir(parents=True, exist_ok=True)
 
-    for seed in experiment.seeds:
-        resolved = resolve_config(experiment, condition, seed)
+    for seed, resolved in resolved_trials:
         recorder_out: Dict[str, Any] = {}
         records = run_trial(
             resolved,
@@ -204,6 +230,9 @@ def run_experiment(
 ) -> Dict[str, Path]:
     """Run a whole experiment file; returns {condition_name: result_dir}."""
     experiment = load_experiment(config_path)
+    root = out_dir / experiment.name
+    if root.exists() and any(root.iterdir()):
+        raise FileExistsError("experiment output must be fresh and empty")
     if conditions:
         defined = {c.name for c in experiment.conditions}
         unknown = [name for name in conditions if name not in defined]
@@ -214,6 +243,44 @@ def run_experiment(
             )
     result_dirs = {}
     names = conditions or [c.name for c in experiment.conditions]
+    for condition in experiment.conditions:
+        if condition.name in names:
+            for seed in experiment.seeds:
+                resolved = resolve_config(experiment, condition, seed)
+                _require_int_at_least("experiment", "generations", resolved.generations, 1)
+                if record_generation is not None:
+                    _require_int_at_least("experiment", "record_generation", record_generation, 0)
+                    if record_generation >= resolved.generations:
+                        raise ValueError("record_generation is outside the experiment budget")
+    source = Path(__file__).resolve().parents[1]
+    digest = hashlib.sha256()
+    for package in ("neat", "world", "experiments", "diversity"):
+        for path in sorted((source / package).rglob("*.py")):
+            digest.update(str(path.relative_to(source)).encode())
+            digest.update(path.read_bytes())
+    try:
+        repository = subprocess.check_output(["git", "-C", str(source), "rev-parse", "--show-toplevel"],
+                                             text=True, stderr=subprocess.DEVNULL).strip()
+        if Path(repository).resolve() != source.resolve():
+            raise ValueError("Installed source is not a Git repository root")
+        commit = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"],
+                                         text=True, stderr=subprocess.DEVNULL).strip()
+    except (OSError, subprocess.CalledProcessError, ValueError):
+        commit = None
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "manifest.json").write_text(json.dumps({
+        "schema": "clage-experiment-manifest", "version": 1,
+        "created_utc": datetime.now(timezone.utc).isoformat(), "source_commit": commit,
+        "source_sha256": digest.hexdigest(), "python": platform.python_version(),
+        "platform": platform.platform(), "experiment": experiment.to_dict(),
+        "matplotlib": importlib.metadata.version("matplotlib"),
+        "control": next(condition.name for condition in experiment.conditions if condition.is_control),
+        "conditions": names, "seeds": experiment.seeds,
+        "scientific_regime": "neat-reconciled-v1/world-observations-v2",
+        "resolved_configs": {condition.name: [resolve_config(experiment, condition, seed).to_dict()
+                             for seed in experiment.seeds] for condition in experiment.conditions
+                             if condition.name in names},
+    }, indent=2) + "\n")
     for condition in experiment.conditions:
         if condition.name not in names:
             continue

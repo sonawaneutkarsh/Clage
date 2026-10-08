@@ -1,0 +1,42 @@
+
+=== OR ===
+trial | solved | gens | best fit | nodes | conns | max sp
+---------------------------------------------------------
+    0 |   True |    9 |   0.9513 |     4 |     4 |      3
+    1 |   True |    6 |   0.9469 |     4 |     4 |      2
+    2 |   True |    5 |   0.9068 |     4 |     4 |      2
+    3 |   True |    6 |   0.9325 |     3 |     2 |      2
+    4 |   True |    8 |   0.9565 |     3 |     2 |      2
+success 5/5 (100%), gens-to-solve 5/6/9 (min/med/max), mean best fitness 0.9388
+
+=== AND ===
+trial | solved | gens | best fit | nodes | conns | max sp
+---------------------------------------------------------
+    0 |   True |    6 |   0.8972 |     4 |     4 |      2
+    1 |   True |    8 |   0.9091 |     3 |     2 |      2
+    2 |   True |    7 |   0.9042 |     4 |     2 |      2
+    3 |   True |    8 |   0.9070 |     3 |     2 |      4
+    4 |   True |   17 |   0.9077 |     4 |     4 |      2
+success 5/5 (100%), gens-to-solve 6/8/17 (min/med/max), mean best fitness 0.9051
+
+=== XOR ===
+trial | solved | gens | best fit | nodes | conns | max sp
+---------------------------------------------------------
+    0 |   True |  212 |   0.8807 |    19 |    17 |     22
+    1 |   True |  125 |   0.9017 |     9 |    15 |     17
+    2 |   True |   68 |   0.8952 |     7 |     9 |     18
+    3 |   True |  143 |   0.8927 |    20 |    20 |     21
+    4 |   True |  102 |   0.8876 |     8 |    18 |     16
+success 5/5 (100%), gens-to-solve 68/125/212 (min/med/max), mean best fitness 0.8916
+
+=== sin ===
+trial | solved | gens | best fit | nodes | conns | max sp
+---------------------------------------------------------
+    0 |  False | >300 |   0.9112 |    38 |    19 |     21
+    1 |  False | >300 |   0.9115 |    22 |    16 |     16
+    2 |  False | >300 |   0.9093 |    15 |    25 |     19
+    3 |  False | >300 |   0.9536 |    11 |    24 |     17
+    4 |  False | >300 |   0.9117 |    21 |    14 |     17
+success 0/5 (0%), gens-to-solve None/None/None (min/med/max), mean best fitness 0.9195
+
+report written to /Users/utkarsh/Clage/docs/final-review/2026-10-08/neat-benchmarks.json

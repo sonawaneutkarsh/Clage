@@ -1,0 +1,15 @@
+{
+  "world_ticks": 2560,
+  "duration_s": 11.23202624998521,
+  "retained_frames": 42,
+  "reproduction": {
+    "recorded_frames_verified": 42,
+    "last_sequence": 2567,
+    "method": "rerun from frozen config/seed, NOT resume from replay",
+    "source_commit": "cb90edee1469769be5818be5a546d5f84d92cb70",
+    "current_commit": "cb90edee1469769be5818be5a546d5f84d92cb70",
+    "source_sha256": "901aaf6df2ebe2140eb33c0bc923088e79006bce8f1d6b3cb606bf19b028ff3d",
+    "current_source_sha256": "901aaf6df2ebe2140eb33c0bc923088e79006bce8f1d6b3cb606bf19b028ff3d",
+    "current_dirty": false
+  }
+}

@@ -46,6 +46,7 @@ class Network:
         self._output_ids: List[int] = sorted(
             n.id for n in genome.outputs if n.node_type is NodeType.OUTPUT
         )
+        self._input_set = frozenset(self._input_ids)
         self._bias: Dict[int, float] = {n.id: n.bias for n in genome.nodes.values()}
 
         self._incoming: Dict[int, List[Tuple[int, float]]] = {
@@ -55,6 +56,8 @@ class Network:
             self._incoming[conn.out_node].append((conn.in_node, conn.weight))
 
         self._order: List[int] = self._topological_order(genome)
+        self._plan = [(identity, self._bias[identity], self._incoming[identity])
+                      for identity in self._order if identity not in self._input_set]
 
     @staticmethod
     def _topological_order(genome: Genome) -> List[int]:
@@ -105,6 +108,11 @@ class Network:
 
     def activate(self, inputs: Sequence[float]) -> List[float]:
         """Run one forward pass. ``inputs`` length must match the input nodes."""
+        outputs, _ = self.activate_with_trace(inputs)
+        return outputs
+
+    def activate_with_trace(self, inputs: Sequence[float]) -> Tuple[List[float], Dict[int, float]]:
+        """Return outputs and node values from the same actual forward pass."""
         if len(inputs) != len(self._input_ids):
             raise ValueError(
                 f"expected {len(self._input_ids)} inputs, got {len(inputs)}"
@@ -114,15 +122,13 @@ class Network:
         for nid, value in zip(self._input_ids, inputs):
             values[nid] = value
 
-        for nid in self._order:
-            if nid in self._input_ids:
-                continue
-            total = self._bias[nid]
-            for source, weight in self._incoming.get(nid, ()):
+        for nid, bias, incoming in self._plan:
+            total = bias
+            for source, weight in incoming:
                 total += values[source] * weight
             values[nid] = ACTIVATION(total)
 
-        return [values[nid] for nid in self._output_ids]
+        return [values[nid] for nid in self._output_ids], values
 
     # ------------------------------------------------------------------ dunder
 

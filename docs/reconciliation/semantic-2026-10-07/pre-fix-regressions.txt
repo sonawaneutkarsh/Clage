@@ -1,0 +1,1533 @@
+FFFFF.FFF.FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF....FFF.FFFFFFFFF [ 98%]
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_champion_identity_is_full_genotype[bias] _________________
+
+change = 'bias'
+
+    @pytest.mark.parametrize("change", ["bias", "weight", "enabled", "type", "endpoint"])
+    def test_champion_identity_is_full_genotype(change):
+        genome = wired()
+        altered = genome.copy()
+        if change == "bias":
+            altered.nodes[15].bias = 1
+        elif change == "weight":
+            altered.connections[0].weight = -1
+        elif change == "enabled":
+            altered.connections[0].enabled = False
+        elif change == "type":
+            altered.nodes[15].node_type = NodeType.HIDDEN
+        else:
+            altered.connections[0].in_node = 13
+>       assert _structure_signature(genome) != _structure_signature(altered)
+E       assert (2, 1, (99,)) != (2, 1, (99,))
+E        +  where (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+E        +  and   (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+
+tests/test_semantic_reconciliation.py:48: AssertionError
+_______________ test_champion_identity_is_full_genotype[weight] ________________
+
+change = 'weight'
+
+    @pytest.mark.parametrize("change", ["bias", "weight", "enabled", "type", "endpoint"])
+    def test_champion_identity_is_full_genotype(change):
+        genome = wired()
+        altered = genome.copy()
+        if change == "bias":
+            altered.nodes[15].bias = 1
+        elif change == "weight":
+            altered.connections[0].weight = -1
+        elif change == "enabled":
+            altered.connections[0].enabled = False
+        elif change == "type":
+            altered.nodes[15].node_type = NodeType.HIDDEN
+        else:
+            altered.connections[0].in_node = 13
+>       assert _structure_signature(genome) != _structure_signature(altered)
+E       assert (2, 1, (99,)) != (2, 1, (99,))
+E        +  where (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+E        +  and   (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+
+tests/test_semantic_reconciliation.py:48: AssertionError
+_______________ test_champion_identity_is_full_genotype[enabled] _______________
+
+change = 'enabled'
+
+    @pytest.mark.parametrize("change", ["bias", "weight", "enabled", "type", "endpoint"])
+    def test_champion_identity_is_full_genotype(change):
+        genome = wired()
+        altered = genome.copy()
+        if change == "bias":
+            altered.nodes[15].bias = 1
+        elif change == "weight":
+            altered.connections[0].weight = -1
+        elif change == "enabled":
+            altered.connections[0].enabled = False
+        elif change == "type":
+            altered.nodes[15].node_type = NodeType.HIDDEN
+        else:
+            altered.connections[0].in_node = 13
+>       assert _structure_signature(genome) != _structure_signature(altered)
+E       assert (2, 1, (99,)) != (2, 1, (99,))
+E        +  where (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+E        +  and   (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+
+tests/test_semantic_reconciliation.py:48: AssertionError
+________________ test_champion_identity_is_full_genotype[type] _________________
+
+change = 'type'
+
+    @pytest.mark.parametrize("change", ["bias", "weight", "enabled", "type", "endpoint"])
+    def test_champion_identity_is_full_genotype(change):
+        genome = wired()
+        altered = genome.copy()
+        if change == "bias":
+            altered.nodes[15].bias = 1
+        elif change == "weight":
+            altered.connections[0].weight = -1
+        elif change == "enabled":
+            altered.connections[0].enabled = False
+        elif change == "type":
+            altered.nodes[15].node_type = NodeType.HIDDEN
+        else:
+            altered.connections[0].in_node = 13
+>       assert _structure_signature(genome) != _structure_signature(altered)
+E       assert (2, 1, (99,)) != (2, 1, (99,))
+E        +  where (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+E        +  and   (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+
+tests/test_semantic_reconciliation.py:48: AssertionError
+______________ test_champion_identity_is_full_genotype[endpoint] _______________
+
+change = 'endpoint'
+
+    @pytest.mark.parametrize("change", ["bias", "weight", "enabled", "type", "endpoint"])
+    def test_champion_identity_is_full_genotype(change):
+        genome = wired()
+        altered = genome.copy()
+        if change == "bias":
+            altered.nodes[15].bias = 1
+        elif change == "weight":
+            altered.connections[0].weight = -1
+        elif change == "enabled":
+            altered.connections[0].enabled = False
+        elif change == "type":
+            altered.nodes[15].node_type = NodeType.HIDDEN
+        else:
+            altered.connections[0].in_node = 13
+>       assert _structure_signature(genome) != _structure_signature(altered)
+E       assert (2, 1, (99,)) != (2, 1, (99,))
+E        +  where (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+E        +  and   (2, 1, (99,)) = _structure_signature(Genome(nodes=2, connections=1, fitness=0.000))
+
+tests/test_semantic_reconciliation.py:48: AssertionError
+_____________ test_species_elites_respect_member_count_and_budget ______________
+
+    def test_species_elites_respect_member_count_and_budget():
+        population = Population(lambda genome, generation: 1, population_size=4, elitism=4)
+        species = Species(0, population.population[0])
+        species.members = [population.population[0]]
+        offspring = []
+        population._reproduce_species(species, 4, offspring)
+>       assert len(offspring) == 4
+E       assert 1 == 4
+E        +  where 1 = len([Genome(nodes=14, connections=0, fitness=0.000)])
+
+tests/test_semantic_reconciliation.py:70: AssertionError
+_____________ test_invalid_generation_budget_does_not_advance[-1] ______________
+
+value = -1
+
+    @pytest.mark.parametrize("value", [-1, True, 1.5])
+    def test_invalid_generation_budget_does_not_advance(value):
+        population = Population(lambda genome, generation: 1, population_size=4)
+>       with pytest.raises((ValueError, TypeError)):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (ValueError, TypeError)
+
+tests/test_semantic_reconciliation.py:76: Failed
+____________ test_invalid_generation_budget_does_not_advance[True] _____________
+
+value = True
+
+    @pytest.mark.parametrize("value", [-1, True, 1.5])
+    def test_invalid_generation_budget_does_not_advance(value):
+        population = Population(lambda genome, generation: 1, population_size=4)
+>       with pytest.raises((ValueError, TypeError)):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (ValueError, TypeError)
+
+tests/test_semantic_reconciliation.py:76: Failed
+________________________ test_founder_count_must_agree _________________________
+
+    def test_founder_count_must_agree():
+>       with pytest.raises(ValueError, match="match"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:82: Failed
+______ test_crossover_bias_inherits_both_and_equal_bias_consumes_no_draw _______
+
+    def test_crossover_bias_inherits_both_and_equal_bias_consumes_no_draw():
+        first = Genome.minimal([0], [10], bias=1)
+        second = Genome.minimal([0], [10], bias=2)
+        old = _structure_signature(first)
+>       assert {crossover(first, second, random.Random(seed)).nodes[10].bias
+                for seed in range(20)} == {1, 2}
+E       assert {1} == {1, 2}
+E         
+E         Extra items in the right set:
+E         2
+E         Use -v to get more diff
+
+tests/test_semantic_reconciliation.py:91: AssertionError
+_______________ test_crossover_rejects_conflicting_history[role] _______________
+
+conflict = 'role'
+
+    @pytest.mark.parametrize("conflict", ["role", "endpoint", "pair"])
+    def test_crossover_rejects_conflicting_history(conflict):
+        first = wired()
+        second = first.copy()
+        if conflict == "role":
+            second.nodes[15].node_type = NodeType.HIDDEN
+        elif conflict == "endpoint":
+            second.add_node(NodeGene(16, NodeType.HIDDEN))
+            second.connections[0].out_node = 16
+        else:
+            second.connections[0].innovation = 100
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:111: Failed
+_____________ test_crossover_rejects_conflicting_history[endpoint] _____________
+
+conflict = 'endpoint'
+
+    @pytest.mark.parametrize("conflict", ["role", "endpoint", "pair"])
+    def test_crossover_rejects_conflicting_history(conflict):
+        first = wired()
+        second = first.copy()
+        if conflict == "role":
+            second.nodes[15].node_type = NodeType.HIDDEN
+        elif conflict == "endpoint":
+            second.add_node(NodeGene(16, NodeType.HIDDEN))
+            second.connections[0].out_node = 16
+        else:
+            second.connections[0].innovation = 100
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:111: Failed
+_______________ test_crossover_rejects_conflicting_history[pair] _______________
+
+conflict = 'pair'
+
+    @pytest.mark.parametrize("conflict", ["role", "endpoint", "pair"])
+    def test_crossover_rejects_conflicting_history(conflict):
+        first = wired()
+        second = first.copy()
+        if conflict == "role":
+            second.nodes[15].node_type = NodeType.HIDDEN
+        elif conflict == "endpoint":
+            second.add_node(NodeGene(16, NodeType.HIDDEN))
+            second.connections[0].out_node = 16
+        else:
+            second.connections[0].innovation = 100
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:111: Failed
+_______________ test_imported_history_reserves_ids_and_is_atomic _______________
+
+    def test_imported_history_reserves_ids_and_is_atomic():
+        genome = wired()
+        db = InnovationDB()
+>       node = mutate_add_node(genome, random.Random(0), db)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_semantic_reconciliation.py:118: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+neat/mutation.py:242: in mutate_add_node
+    genome.add_node(hidden)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Genome(nodes=2, connections=1, fitness=0.000)
+node = NodeGene(id=14, type=HIDDEN, bias=+0.000)
+
+    def add_node(self, node: NodeGene) -> None:
+        """Register a node gene. Node ids must be unique."""
+        if node.id in self.nodes:
+>           raise ValueError(f"node id {node.id} already exists in this genome")
+E           ValueError: node id 14 already exists in this genome
+
+neat/genome.py:157: ValueError
+__________ test_invalid_import_registration_does_not_disable_or_mint ___________
+
+    def test_invalid_import_registration_does_not_disable_or_mint():
+        genome = wired()
+        genome.connections.append(ConnectionGene(14, 15, 1, innovation=99))
+        db = InnovationDB()
+        before = db.to_dict()
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:137: Failed
+____________ test_duplicate_interface_ids_reject[inputs0-outputs0] _____________
+
+inputs = [0, 0], outputs = [10]
+
+    @pytest.mark.parametrize("inputs,outputs", [([0, 0], [10]), ([0], [10, 10]), ([0], [0])])
+    def test_duplicate_interface_ids_reject(inputs, outputs):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:145: Failed
+____________ test_duplicate_interface_ids_reject[inputs1-outputs1] _____________
+
+inputs = [0], outputs = [10, 10]
+
+    @pytest.mark.parametrize("inputs,outputs", [([0, 0], [10]), ([0], [10, 10]), ([0], [0])])
+    def test_duplicate_interface_ids_reject(inputs, outputs):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:145: Failed
+____________ test_duplicate_interface_ids_reject[inputs2-outputs2] _____________
+
+inputs = [0], outputs = [0]
+
+    @pytest.mark.parametrize("inputs,outputs", [([0, 0], [10]), ([0], [10, 10]), ([0], [0])])
+    def test_duplicate_interface_ids_reject(inputs, outputs):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:145: Failed
+___________ test_hidden_input_edges_and_duplicate_innovations_reject ___________
+
+    def test_hidden_input_edges_and_duplicate_innovations_reject():
+        genome = wired()
+        genome.add_node(NodeGene(16, NodeType.HIDDEN))
+>       with pytest.raises(ValueError, match="INPUT"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:152: Failed
+________________ test_empty_compatibility_and_flat_diagnostics _________________
+
+    def test_empty_compatibility_and_flat_diagnostics():
+>       assert compatibility_distance(Genome.minimal(), Genome.minimal(),
+                                      SpeciationConfig(small_genome_threshold=0)) == 0
+
+tests/test_semantic_reconciliation.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = Genome(nodes=14, connections=0, fitness=0.000)
+b = Genome(nodes=14, connections=0, fitness=0.000)
+config = SpeciationConfig(excess_coef=1.0, disjoint_coef=1.0, weight_coef=0.4, compatibility_threshold=3.0, small_genome_threshold=0, stagnation_threshold=15)
+
+    def compatibility_distance(a: Genome, b: Genome, config: SpeciationConfig) -> float:
+        """The structural distance used to decide whether two genomes share a species.
+    
+        ``delta = c1*E/N + c2*D/N + c3*W`` where E/D are excess/disjoint counts,
+        W is the average matching-weight difference, and N is the larger gene count
+        (set to 1 for small genomes, per the NEAT paper).
+        """
+        excess, disjoint, _ = gene_counts(a, b)
+        n = max(len(a.connections), len(b.connections))
+        if n < config.small_genome_threshold:
+            n = 1
+        return (
+>           config.excess_coef * excess / n
+            + config.disjoint_coef * disjoint / n
+            + config.weight_coef * average_weight_difference(a, b)
+        )
+E       ZeroDivisionError: float division by zero
+
+neat/speciation.py:145: ZeroDivisionError
+___________________ test_experiment_seed_validation[seeds0] ____________________
+
+seeds = []
+
+    @pytest.mark.parametrize("seeds", [[], [0, 0], [True], [0.5]])
+    def test_experiment_seed_validation(seeds):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:175: Failed
+___________________ test_experiment_seed_validation[seeds1] ____________________
+
+seeds = [0, 0]
+
+    @pytest.mark.parametrize("seeds", [[], [0, 0], [True], [0.5]])
+    def test_experiment_seed_validation(seeds):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:175: Failed
+___________________ test_experiment_seed_validation[seeds2] ____________________
+
+seeds = [True]
+
+    @pytest.mark.parametrize("seeds", [[], [0, 0], [True], [0.5]])
+    def test_experiment_seed_validation(seeds):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:175: Failed
+___________________ test_experiment_seed_validation[seeds3] ____________________
+
+seeds = [0.5]
+
+    @pytest.mark.parametrize("seeds", [[], [0, 0], [True], [0.5]])
+    def test_experiment_seed_validation(seeds):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:175: Failed
+________________________ test_safe_experiment_names[..] ________________________
+
+name = '..'
+
+    @pytest.mark.parametrize("name", ["..", "../bad", "bad/name", "bad\\name", ""])
+    def test_safe_experiment_names(name):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:181: Failed
+______________________ test_safe_experiment_names[../bad] ______________________
+
+name = '../bad'
+
+    @pytest.mark.parametrize("name", ["..", "../bad", "bad/name", "bad\\name", ""])
+    def test_safe_experiment_names(name):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:181: Failed
+_____________________ test_safe_experiment_names[bad/name] _____________________
+
+name = 'bad/name'
+
+    @pytest.mark.parametrize("name", ["..", "../bad", "bad/name", "bad\\name", ""])
+    def test_safe_experiment_names(name):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:181: Failed
+____________________ test_safe_experiment_names[bad\\name] _____________________
+
+name = 'bad\\name'
+
+    @pytest.mark.parametrize("name", ["..", "../bad", "bad/name", "bad\\name", ""])
+    def test_safe_experiment_names(name):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:181: Failed
+_________________________ test_safe_experiment_names[] _________________________
+
+name = ''
+
+    @pytest.mark.parametrize("name", ["..", "../bad", "bad/name", "bad\\name", ""])
+    def test_safe_experiment_names(name):
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:181: Failed
+________________ test_output_preflight_and_manifest_provenance _________________
+
+tmp_path = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_output_preflight_and_mani0')
+
+    def test_output_preflight_and_manifest_provenance(tmp_path):
+        experiment, config = tiny_config(tmp_path)
+        target = tmp_path / "runs"
+        run_experiment(config, target, conditions=["control"])
+>       manifest = json.loads((target / experiment.name / "manifest.json").read_text())
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_semantic_reconciliation.py:200: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_output_preflight_and_mani0/runs/food_abundance/manifest.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_output_preflight_and_mani0/runs/food_abundance/manifest.json'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+______ test_invalid_recording_budget_and_foreign_condition_write_nothing _______
+
+tmp_path = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_invalid_recording_budget_0')
+
+    def test_invalid_recording_budget_and_foreign_condition_write_nothing(tmp_path):
+        experiment, config = tiny_config(tmp_path)
+        target = tmp_path / "runs"
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:215: Failed
+_______ test_legacy_manifest_does_not_attribute_an_unrelated_git_parent ________
+
+tmp_path = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_legacy_manifest_does_not_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x108bd2b10>
+
+    def test_legacy_manifest_does_not_attribute_an_unrelated_git_parent(tmp_path, monkeypatch):
+        import experiments.run as runner
+        experiment, config = tiny_config(tmp_path)
+        monkeypatch.setattr(runner, "__file__", str(tmp_path / "installed/experiments/run.py"))
+        def git_output(command, **kwargs):
+            assert command[-1] == "--show-toplevel"
+            return str(tmp_path / "unrelated") + "\n"
+>       monkeypatch.setattr(runner.subprocess, "check_output", git_output)
+                            ^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'experiments.run' has no attribute 'subprocess'
+
+tests/test_semantic_reconciliation.py:230: AttributeError
+______________ test_experiment_generations_reject_before_write[0] ______________
+
+generations = 0
+
+    @pytest.mark.parametrize("generations", [0, -1, True, 1.5])
+    def test_experiment_generations_reject_before_write(generations):
+>       with pytest.raises(ValueError, match="generations"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:239: Failed
+_____________ test_experiment_generations_reject_before_write[-1] ______________
+
+generations = -1
+
+    @pytest.mark.parametrize("generations", [0, -1, True, 1.5])
+    def test_experiment_generations_reject_before_write(generations):
+>       with pytest.raises(ValueError, match="generations"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:239: Failed
+____________ test_experiment_generations_reject_before_write[True] _____________
+
+generations = True
+
+    @pytest.mark.parametrize("generations", [0, -1, True, 1.5])
+    def test_experiment_generations_reject_before_write(generations):
+>       with pytest.raises(ValueError, match="generations"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:239: Failed
+_____________ test_experiment_generations_reject_before_write[1.5] _____________
+
+generations = 1.5
+
+    @pytest.mark.parametrize("generations", [0, -1, True, 1.5])
+    def test_experiment_generations_reject_before_write(generations):
+>       with pytest.raises(ValueError, match="generations"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:239: Failed
+______ test_invalid_serialized_history_counters_reject[node_counter-True] ______
+
+field = 'node_counter', value = True
+
+    @pytest.mark.parametrize("field,value", [("node_counter", True), ("innovation_counter", 99)])
+    def test_invalid_serialized_history_counters_reject(field, value):
+        db = InnovationDB()
+>       db.register_genomes([wired()])
+        ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'InnovationDB' object has no attribute 'register_genomes'
+
+tests/test_semantic_reconciliation.py:247: AttributeError
+____ test_invalid_serialized_history_counters_reject[innovation_counter-99] ____
+
+field = 'innovation_counter', value = 99
+
+    @pytest.mark.parametrize("field,value", [("node_counter", True), ("innovation_counter", 99)])
+    def test_invalid_serialized_history_counters_reject(field, value):
+        db = InnovationDB()
+>       db.register_genomes([wired()])
+        ^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'InnovationDB' object has no attribute 'register_genomes'
+
+tests/test_semantic_reconciliation.py:247: AttributeError
+___________ test_aggregation_rejects_invalid_trials[aggregate-empty] ___________
+
+mode = 'empty', aggregator = <function aggregate at 0x106569e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:270: Failed
+__________ test_aggregation_rejects_invalid_trials[aggregate-ragged] ___________
+
+mode = 'ragged', aggregator = <function aggregate at 0x106569e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+trials = [[{'population_size': 1, 'survival_rate': 1, 'average_lifetime': 1, 'best_fitness': 1, ...}], []]
+
+    def aggregate(trials: List[List[Dict[str, Any]]]) -> Dict[int, Dict[str, Dict[str, float]]]:
+        """Per generation -> per metric -> {mean, std, min, max} across seeds."""
+        if not trials:
+            return {}
+        aggregated: Dict[int, Dict[str, Dict[str, float]]] = {}
+        n_generations = len(trials[0])
+        for generation in range(n_generations):
+            row = {}
+            for metric in NUMERIC_METRICS:
+>               values = [trial[generation][metric] for trial in trials]
+                          ^^^^^^^^^^^^^^^^^
+E               IndexError: list index out of range
+
+experiments/analysis.py:72: IndexError
+___________ test_aggregation_rejects_invalid_trials[aggregate-order] ___________
+
+mode = 'order', aggregator = <function aggregate at 0x106569e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:270: Failed
+__________ test_aggregation_rejects_invalid_trials[aggregate-missing] __________
+
+mode = 'missing', aggregator = <function aggregate at 0x106569e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+trials = [[{'population_size': 1, 'survival_rate': 1, 'average_lifetime': 1, 'best_fitness': 1, ...}], [{'population_size': 1, 'survival_rate': 1, 'average_lifetime': 1, 'best_fitness': 1, ...}]]
+
+    def aggregate(trials: List[List[Dict[str, Any]]]) -> Dict[int, Dict[str, Dict[str, float]]]:
+        """Per generation -> per metric -> {mean, std, min, max} across seeds."""
+        if not trials:
+            return {}
+        aggregated: Dict[int, Dict[str, Dict[str, float]]] = {}
+        n_generations = len(trials[0])
+        for generation in range(n_generations):
+            row = {}
+            for metric in NUMERIC_METRICS:
+>               values = [trial[generation][metric] for trial in trials]
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+E               KeyError: 'food_consumed'
+
+experiments/analysis.py:72: KeyError
+____________ test_aggregation_rejects_invalid_trials[aggregate-nan] ____________
+
+mode = 'nan', aggregator = <function aggregate at 0x106569e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+experiments/analysis.py:73: in aggregate
+    row[metric] = _stats(values)
+                  ^^^^^^^^^^^^^^
+experiments/analysis.py:57: in _stats
+    "std": statistics.stdev(values) if len(values) > 1 else 0.0,
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = [1, nan], xbar = None
+
+    def stdev(data, xbar=None):
+        """Return the square root of the sample variance.
+    
+        See ``variance`` for arguments and other details.
+    
+        >>> stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
+        1.0810874155219827
+    
+        """
+        T, ss, c, n = _ss(data, xbar)
+        if n < 2:
+            raise StatisticsError('stdev requires at least two data points')
+        mss = ss / (n - 1)
+        if issubclass(T, Decimal):
+            return _decimal_sqrt_of_frac(mss.numerator, mss.denominator)
+>       return _float_sqrt_of_frac(mss.numerator, mss.denominator)
+                                   ^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'numerator'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/statistics.py:1211: AttributeError
+____________ test_aggregation_rejects_invalid_trials[aggregate-inf] ____________
+
+mode = 'inf', aggregator = <function aggregate at 0x106569e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+experiments/analysis.py:73: in aggregate
+    row[metric] = _stats(values)
+                  ^^^^^^^^^^^^^^
+experiments/analysis.py:57: in _stats
+    "std": statistics.stdev(values) if len(values) > 1 else 0.0,
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = [1, inf], xbar = None
+
+    def stdev(data, xbar=None):
+        """Return the square root of the sample variance.
+    
+        See ``variance`` for arguments and other details.
+    
+        >>> stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
+        1.0810874155219827
+    
+        """
+        T, ss, c, n = _ss(data, xbar)
+        if n < 2:
+            raise StatisticsError('stdev requires at least two data points')
+        mss = ss / (n - 1)
+        if issubclass(T, Decimal):
+            return _decimal_sqrt_of_frac(mss.numerator, mss.denominator)
+>       return _float_sqrt_of_frac(mss.numerator, mss.denominator)
+                                   ^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'numerator'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/statistics.py:1211: AttributeError
+______ test_aggregation_rejects_invalid_trials[aggregate_condition-empty] ______
+
+mode = 'empty', aggregator = <function aggregate_condition at 0x106809e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:270: Failed
+_____ test_aggregation_rejects_invalid_trials[aggregate_condition-ragged] ______
+
+mode = 'ragged', aggregator = <function aggregate_condition at 0x106809e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+trials = [[{'population_size': 1, 'survival_rate': 1, 'average_lifetime': 1, 'best_fitness': 1, ...}], []]
+
+    def aggregate_condition(
+        trials: List[List[Dict[str, Any]]],
+    ) -> Dict[int, Dict[str, Dict[str, float]]]:
+        """Per generation -> per metric -> {mean, std} across seeds."""
+        if not trials:
+            return {}
+        aggregated: Dict[int, Dict[str, Dict[str, float]]] = {}
+        for generation in range(len(trials[0])):
+            row = {}
+            for metric in METRICS:
+>               values = [trial[generation][metric] for trial in trials]
+                          ^^^^^^^^^^^^^^^^^
+E               IndexError: list index out of range
+
+visual/data.py:96: IndexError
+______ test_aggregation_rejects_invalid_trials[aggregate_condition-order] ______
+
+mode = 'order', aggregator = <function aggregate_condition at 0x106809e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+>       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_semantic_reconciliation.py:270: Failed
+_____ test_aggregation_rejects_invalid_trials[aggregate_condition-missing] _____
+
+mode = 'missing', aggregator = <function aggregate_condition at 0x106809e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+trials = [[{'population_size': 1, 'survival_rate': 1, 'average_lifetime': 1, 'best_fitness': 1, ...}], [{'population_size': 1, 'survival_rate': 1, 'average_lifetime': 1, 'best_fitness': 1, ...}]]
+
+    def aggregate_condition(
+        trials: List[List[Dict[str, Any]]],
+    ) -> Dict[int, Dict[str, Dict[str, float]]]:
+        """Per generation -> per metric -> {mean, std} across seeds."""
+        if not trials:
+            return {}
+        aggregated: Dict[int, Dict[str, Dict[str, float]]] = {}
+        for generation in range(len(trials[0])):
+            row = {}
+            for metric in METRICS:
+>               values = [trial[generation][metric] for trial in trials]
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+E               KeyError: 'food_consumed'
+
+visual/data.py:96: KeyError
+_______ test_aggregation_rejects_invalid_trials[aggregate_condition-nan] _______
+
+mode = 'nan', aggregator = <function aggregate_condition at 0x106809e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+visual/data.py:99: in aggregate_condition
+    "std": statistics.stdev(values) if len(values) > 1 else 0.0,
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = [1, nan], xbar = None
+
+    def stdev(data, xbar=None):
+        """Return the square root of the sample variance.
+    
+        See ``variance`` for arguments and other details.
+    
+        >>> stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
+        1.0810874155219827
+    
+        """
+        T, ss, c, n = _ss(data, xbar)
+        if n < 2:
+            raise StatisticsError('stdev requires at least two data points')
+        mss = ss / (n - 1)
+        if issubclass(T, Decimal):
+            return _decimal_sqrt_of_frac(mss.numerator, mss.denominator)
+>       return _float_sqrt_of_frac(mss.numerator, mss.denominator)
+                                   ^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'numerator'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/statistics.py:1211: AttributeError
+_______ test_aggregation_rejects_invalid_trials[aggregate_condition-inf] _______
+
+mode = 'inf', aggregator = <function aggregate_condition at 0x106809e40>
+
+    @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
+    @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
+    def test_aggregation_rejects_invalid_trials(mode, aggregator):
+        row = {metric: 1 for metric in NUMERIC_METRICS}
+        row["generation"] = 1
+        trials = [[copy.deepcopy(row)], [copy.deepcopy(row)]]
+        if mode == "empty":
+            trials = []
+        elif mode == "ragged":
+            trials[1] = []
+        elif mode == "order":
+            trials[1][0]["generation"] = 2
+        elif mode == "missing":
+            del trials[1][0]["food_consumed"]
+        else:
+            trials[1][0]["food_consumed"] = float(mode)
+        with pytest.raises(ValueError):
+>           aggregator(trials)
+
+tests/test_semantic_reconciliation.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+visual/data.py:99: in aggregate_condition
+    "std": statistics.stdev(values) if len(values) > 1 else 0.0,
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+data = [1, inf], xbar = None
+
+    def stdev(data, xbar=None):
+        """Return the square root of the sample variance.
+    
+        See ``variance`` for arguments and other details.
+    
+        >>> stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
+        1.0810874155219827
+    
+        """
+        T, ss, c, n = _ss(data, xbar)
+        if n < 2:
+            raise StatisticsError('stdev requires at least two data points')
+        mss = ss / (n - 1)
+        if issubclass(T, Decimal):
+            return _decimal_sqrt_of_frac(mss.numerator, mss.denominator)
+>       return _float_sqrt_of_frac(mss.numerator, mss.denominator)
+                                   ^^^^^^^^^^^^^
+E       AttributeError: 'float' object has no attribute 'numerator'
+
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/statistics.py:1211: AttributeError
+_____________ test_legacy_recorder_evaluated_fitness_and_versions ______________
+
+tmp_path = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_legacy_recorder_evaluated0')
+
+    def test_legacy_recorder_evaluated_fitness_and_versions(tmp_path):
+        genomes = [Genome.minimal(range(9), range(10, 14))]
+        genomes[0].fitness = 123
+        config = EnvironmentConfig(width=5, height=7, ticks=3, initial_food=2, food_target=2)
+        recorder = GenerationRecorder(genomes, config, 0)
+>       assert recorder.to_dict()["fitness_phase"] == "unevaluated"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'fitness_phase'
+
+tests/test_semantic_reconciliation.py:279: KeyError
+_______ test_exhausted_reproduction_removes_body_but_preserves_birth[0] ________
+
+fraction = 0
+
+    @pytest.mark.parametrize("fraction", [0, 1])
+    def test_exhausted_reproduction_removes_body_but_preserves_birth(fraction):
+        config = EnvironmentConfig(width=5, height=7, initial_food=0, food_target=0,
+                                   repro_fraction=fraction, repro_threshold=0.5)
+        world = World(config, random.Random(0))
+        body = Organism(Genome.minimal(), 2, 3, config, energy=1)
+        world.place_organism(body)
+        observations = body.observe(world, config)
+        assert observations[-2:] == [0, 0]
+        child = body._try_reproduce(world, config)
+        exhausted = child if fraction == 0 else body
+        assert child is not None and body.offspring == 1
+>       assert not exhausted.alive
+E       assert not True
+E        +  where True = <world.organism.Organism object at 0x108c73520>.alive
+
+tests/test_semantic_reconciliation.py:306: AssertionError
+_______ test_exhausted_reproduction_removes_body_but_preserves_birth[1] ________
+
+fraction = 1
+
+    @pytest.mark.parametrize("fraction", [0, 1])
+    def test_exhausted_reproduction_removes_body_but_preserves_birth(fraction):
+        config = EnvironmentConfig(width=5, height=7, initial_food=0, food_target=0,
+                                   repro_fraction=fraction, repro_threshold=0.5)
+        world = World(config, random.Random(0))
+        body = Organism(Genome.minimal(), 2, 3, config, energy=1)
+        world.place_organism(body)
+        observations = body.observe(world, config)
+        assert observations[-2:] == [0, 0]
+        child = body._try_reproduce(world, config)
+        exhausted = child if fraction == 0 else body
+        assert child is not None and body.offspring == 1
+>       assert not exhausted.alive
+E       assert not True
+E        +  where True = <world.organism.Organism object at 0x108c73860>.alive
+
+tests/test_semantic_reconciliation.py:306: AssertionError
+______________________ test_benchmark_invalid_budgets[0] _______________________
+
+budget = 0
+
+    @pytest.mark.parametrize("budget", [0, -1, True, 1.5])
+    def test_benchmark_invalid_budgets(budget):
+        with pytest.raises((ValueError, TypeError)):
+>           benchmark_trial(PROBLEMS["xor"], 0, max_generations=budget)
+
+tests/test_semantic_reconciliation.py:354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+problem = Problem(name='XOR', input_ids=(0, 1), output_ids=(10,), cases=(((0, 0), 0.0), ((0, 1), 1.0), ((1, 0), 1.0), ((1, 1), 0..._problem.<locals>.<lambda> at 0x1065f1f80>, success_description='all 4 truth-table rows classified with |out-y| < 0.5')
+seed = 0, population_size = 100, max_generations = 0
+
+    def run_trial(
+        problem: Problem,
+        seed: int,
+        *,
+        population_size: int = DEFAULT_POPULATION_SIZE,
+        max_generations: int = DEFAULT_MAX_GENERATIONS,
+    ) -> TrialResult:
+        """One independent, seeded run of ``problem`` with engine-default settings."""
+        population = Population(
+            problem.fitness_fn,
+            population_size=population_size,
+            seed=seed,
+            input_ids=list(problem.input_ids),
+            output_ids=list(problem.output_ids),
+        )
+    
+        history: List[Dict] = []
+        solved = False
+        generations_to_solve: Optional[int] = None
+    
+        for generation in range(1, max_generations + 1):
+            population.run(1)
+            gen_best = population.evaluated_best_genome
+            if gen_best is None:
+                raise RuntimeError(
+                    f"generation {generation}: Population.evaluated_best_genome is None, so no "
+                    "evaluated champion exists for this generation; refusing to describe the row "
+                    "with an unevaluated post-reproduction genome"
+                )
+            stat = population.statistics[-1]
+            is_solved = problem.success_fn(gen_best)
+    
+            history.append(
+                {
+                    "generation": generation,
+                    "best_fitness": gen_best.fitness,
+                    "mean_fitness": stat["mean_fitness"],
+                    "species_count": stat["species_count"],
+                    "best_node_count": len(gen_best.nodes),
+                    "best_connection_count": len(gen_best.connections),
+                    "solved": is_solved,
+                }
+            )
+    
+            if is_solved:
+                solved = True
+                generations_to_solve = generation
+                break
+    
+        return TrialResult(
+            problem=problem.name,
+            seed=seed,
+            solved=solved,
+            generations_to_solve=generations_to_solve,
+>           total_generations=generation,
+                              ^^^^^^^^^^
+            history=history,
+        )
+E       UnboundLocalError: cannot access local variable 'generation' where it is not associated with a value
+
+benchmarks/run.py:117: UnboundLocalError
+______________________ test_benchmark_invalid_budgets[-1] ______________________
+
+budget = -1
+
+    @pytest.mark.parametrize("budget", [0, -1, True, 1.5])
+    def test_benchmark_invalid_budgets(budget):
+        with pytest.raises((ValueError, TypeError)):
+>           benchmark_trial(PROBLEMS["xor"], 0, max_generations=budget)
+
+tests/test_semantic_reconciliation.py:354: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+problem = Problem(name='XOR', input_ids=(0, 1), output_ids=(10,), cases=(((0, 0), 0.0), ((0, 1), 1.0), ((1, 0), 1.0), ((1, 1), 0..._problem.<locals>.<lambda> at 0x1065f1f80>, success_description='all 4 truth-table rows classified with |out-y| < 0.5')
+seed = 0, population_size = 100, max_generations = -1
+
+    def run_trial(
+        problem: Problem,
+        seed: int,
+        *,
+        population_size: int = DEFAULT_POPULATION_SIZE,
+        max_generations: int = DEFAULT_MAX_GENERATIONS,
+    ) -> TrialResult:
+        """One independent, seeded run of ``problem`` with engine-default settings."""
+        population = Population(
+            problem.fitness_fn,
+            population_size=population_size,
+            seed=seed,
+            input_ids=list(problem.input_ids),
+            output_ids=list(problem.output_ids),
+        )
+    
+        history: List[Dict] = []
+        solved = False
+        generations_to_solve: Optional[int] = None
+    
+        for generation in range(1, max_generations + 1):
+            population.run(1)
+            gen_best = population.evaluated_best_genome
+            if gen_best is None:
+                raise RuntimeError(
+                    f"generation {generation}: Population.evaluated_best_genome is None, so no "
+                    "evaluated champion exists for this generation; refusing to describe the row "
+                    "with an unevaluated post-reproduction genome"
+                )
+            stat = population.statistics[-1]
+            is_solved = problem.success_fn(gen_best)
+    
+            history.append(
+                {
+                    "generation": generation,
+                    "best_fitness": gen_best.fitness,
+                    "mean_fitness": stat["mean_fitness"],
+                    "species_count": stat["species_count"],
+                    "best_node_count": len(gen_best.nodes),
+                    "best_connection_count": len(gen_best.connections),
+                    "solved": is_solved,
+                }
+            )
+    
+            if is_solved:
+                solved = True
+                generations_to_solve = generation
+                break
+    
+        return TrialResult(
+            problem=problem.name,
+            seed=seed,
+            solved=solved,
+            generations_to_solve=generations_to_solve,
+>           total_generations=generation,
+                              ^^^^^^^^^^
+            history=history,
+        )
+E       UnboundLocalError: cannot access local variable 'generation' where it is not associated with a value
+
+benchmarks/run.py:117: UnboundLocalError
+_____________________ test_benchmark_invalid_budgets[True] _____________________
+
+budget = True
+
+    @pytest.mark.parametrize("budget", [0, -1, True, 1.5])
+    def test_benchmark_invalid_budgets(budget):
+>       with pytest.raises((ValueError, TypeError)):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE any of (ValueError, TypeError)
+
+tests/test_semantic_reconciliation.py:353: Failed
+_____________________ test_scientific_regime_replay_guard ______________________
+
+    def test_scientific_regime_replay_guard():
+        experiment = Experiment(RunConfig(population=4, ticks=3, generations=2,
+                                          width=6, height=6, food=4))
+        while experiment.advance():
+            pass
+        data = experiment.bundle()
+        verification = reproduce(data)
+        assert verification["recorded_frames_verified"] == len(data["frames"])
+>       assert len(verification["source_sha256"]) == 64
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'source_sha256'
+
+tests/test_semantic_reconciliation.py:367: KeyError
+___________________ test_world_orientation_and_control_state ___________________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+
+    def test_world_orientation_and_control_state(recording):
+        fig, ax = plt.subplots()
+        draw_frame(ax, recording, 0)
+>       assert ax.yaxis_inverted()
+E       AssertionError: assert np.False_
+E        +  where np.False_ = yaxis_inverted()
+E        +    where yaxis_inverted = <Axes: title={'center': 'generation 0   tick 0/3   live 1/1   pop 1'}>.yaxis_inverted
+
+tests/test_reconciled_viewers.py:30: AssertionError
+___________ test_tui_cell_width_selection_cursor_and_fitness_labels ____________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+
+    def test_tui_cell_width_selection_cursor_and_fitness_labels(recording):
+>       lines = world_grid_lines(recording, 0, cursor=(0, 0))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: world_grid_lines() got an unexpected keyword argument 'cursor'
+
+tests/test_reconciled_viewers.py:47: TypeError
+_____________ test_invalid_tui_fps_fails_before_terminal_setup[0] ______________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+fps = 0
+
+    @pytest.mark.parametrize("fps", [0, -1, math.nan, math.inf])
+    def test_invalid_tui_fps_fails_before_terminal_setup(recording, fps):
+>       with pytest.raises(ValueError, match="fps"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'fps'
+E         Actual message: 'redirected stdin is pseudofile, has no fileno()'
+
+tests/test_reconciled_viewers.py:57: AssertionError
+_____________ test_invalid_tui_fps_fails_before_terminal_setup[-1] _____________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+fps = -1
+
+    @pytest.mark.parametrize("fps", [0, -1, math.nan, math.inf])
+    def test_invalid_tui_fps_fails_before_terminal_setup(recording, fps):
+>       with pytest.raises(ValueError, match="fps"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'fps'
+E         Actual message: 'redirected stdin is pseudofile, has no fileno()'
+
+tests/test_reconciled_viewers.py:57: AssertionError
+____________ test_invalid_tui_fps_fails_before_terminal_setup[nan] _____________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+fps = nan
+
+    @pytest.mark.parametrize("fps", [0, -1, math.nan, math.inf])
+    def test_invalid_tui_fps_fails_before_terminal_setup(recording, fps):
+>       with pytest.raises(ValueError, match="fps"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'fps'
+E         Actual message: 'redirected stdin is pseudofile, has no fileno()'
+
+tests/test_reconciled_viewers.py:57: AssertionError
+____________ test_invalid_tui_fps_fails_before_terminal_setup[inf] _____________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+fps = inf
+
+    @pytest.mark.parametrize("fps", [0, -1, math.nan, math.inf])
+    def test_invalid_tui_fps_fails_before_terminal_setup(recording, fps):
+>       with pytest.raises(ValueError, match="fps"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'fps'
+E         Actual message: 'redirected stdin is pseudofile, has no fileno()'
+
+tests/test_reconciled_viewers.py:57: AssertionError
+_____________ test_network_legend_unwired_labels_and_export_alias ______________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_network_legend_unwired_la0')
+
+    def test_network_legend_unwired_labels_and_export_alias(recording, tmp_path):
+        fig, ax = plt.subplots()
+        draw_genome(ax, recording["genomes"][0])
+>       assert "Unwired" in ax.get_title()
+E       AssertionError: assert 'Unwired' in ''
+E        +  where '' = get_title()
+E        +    where get_title = <Axes: >.get_title
+
+tests/test_reconciled_viewers.py:64: AssertionError
+______________ test_unknown_metric_rejected_and_table_transposed _______________
+
+tmp_path = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_unknown_metric_rejected_a0')
+
+    def test_unknown_metric_rejected_and_table_transposed(tmp_path):
+        fig, ax = plt.subplots()
+>       with pytest.raises(ValueError, match="unknown metric"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_reconciled_viewers.py:78: Failed
+______________ test_actual_pty_handles_queued_and_fragmented_keys ______________
+
+recording = {'schema': 'clage-generation-replay', 'version': 1, 'generation': 0, 'config': {'width': 5, 'height': 7, 'ticks': 3, 'initial_energy': 1.0, ...}, ...}
+tmp_path = PosixPath('/private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pytest-of-utkarsh/pytest-47/test_actual_pty_handles_queued0')
+
+    def test_actual_pty_handles_queued_and_fragmented_keys(recording, tmp_path):
+        import os
+        import pty
+        import select
+        import subprocess
+        import sys
+        import time
+    
+        for tick in recording["ticks"]:
+            tick["organisms"][0].update(x=1, y=1, alive=True)
+        path = tmp_path / "replay.json"
+        path.write_text(json.dumps(recording))
+        master, slave = pty.openpty()
+        process = subprocess.Popen([sys.executable, "-m", "visual", "tui", "--recording", str(path),
+                                    "--fps", "30"], stdin=slave, stdout=slave, stderr=slave)
+        os.close(slave)
+        received = b""
+        def read_until(predicate):
+            nonlocal received
+            deadline = time.monotonic() + 3
+            while not predicate(received) and time.monotonic() < deadline:
+                if select.select([master], [], [], 0.1)[0]:
+                    received += os.read(master, 65536)
+            assert predicate(received)
+        try:
+            read_until(lambda output: b"CLAGE" in output)
+            os.write(master, b" ds\r")
+>           read_until(lambda output: b"Body:     0" in output)
+
+tests/test_reconciled_viewers.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+predicate = <function test_actual_pty_handles_queued_and_fragmented_keys.<locals>.<lambda> at 0x108eb1580>
+
+    def read_until(predicate):
+        nonlocal received
+        deadline = time.monotonic() + 3
+        while not predicate(received) and time.monotonic() < deadline:
+            if select.select([master], [], [], 0.1)[0]:
+                received += os.read(master, 65536)
+>       assert predicate(received)
+E       AssertionError: assert False
+E        +  where False = <function test_actual_pty_handles_queued_and_fragmented_keys.<locals>.<lambda> at 0x108eb1580>(b'\x1b[H\x1b[J\xe2\x94\x8c\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94...e2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80')
+
+tests/test_reconciled_viewers.py:113: AssertionError
+=============================== warnings summary ===============================
+tests/test_reconciled_viewers.py::test_unknown_metric_rejected_and_table_transposed
+  /private/tmp/clage-semantic-baseline-20261007/visual/analytics.py:56: UserWarning: No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
+    ax.legend(fontsize=7)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_semantic_reconciliation.py::test_champion_identity_is_full_genotype[bias]
+FAILED tests/test_semantic_reconciliation.py::test_champion_identity_is_full_genotype[weight]
+FAILED tests/test_semantic_reconciliation.py::test_champion_identity_is_full_genotype[enabled]
+FAILED tests/test_semantic_reconciliation.py::test_champion_identity_is_full_genotype[type]
+FAILED tests/test_semantic_reconciliation.py::test_champion_identity_is_full_genotype[endpoint]
+FAILED tests/test_semantic_reconciliation.py::test_species_elites_respect_member_count_and_budget
+FAILED tests/test_semantic_reconciliation.py::test_invalid_generation_budget_does_not_advance[-1]
+FAILED tests/test_semantic_reconciliation.py::test_invalid_generation_budget_does_not_advance[True]
+FAILED tests/test_semantic_reconciliation.py::test_founder_count_must_agree
+FAILED tests/test_semantic_reconciliation.py::test_crossover_bias_inherits_both_and_equal_bias_consumes_no_draw
+FAILED tests/test_semantic_reconciliation.py::test_crossover_rejects_conflicting_history[role]
+FAILED tests/test_semantic_reconciliation.py::test_crossover_rejects_conflicting_history[endpoint]
+FAILED tests/test_semantic_reconciliation.py::test_crossover_rejects_conflicting_history[pair]
+FAILED tests/test_semantic_reconciliation.py::test_imported_history_reserves_ids_and_is_atomic
+FAILED tests/test_semantic_reconciliation.py::test_invalid_import_registration_does_not_disable_or_mint
+FAILED tests/test_semantic_reconciliation.py::test_duplicate_interface_ids_reject[inputs0-outputs0]
+FAILED tests/test_semantic_reconciliation.py::test_duplicate_interface_ids_reject[inputs1-outputs1]
+FAILED tests/test_semantic_reconciliation.py::test_duplicate_interface_ids_reject[inputs2-outputs2]
+FAILED tests/test_semantic_reconciliation.py::test_hidden_input_edges_and_duplicate_innovations_reject
+FAILED tests/test_semantic_reconciliation.py::test_empty_compatibility_and_flat_diagnostics
+FAILED tests/test_semantic_reconciliation.py::test_experiment_seed_validation[seeds0]
+FAILED tests/test_semantic_reconciliation.py::test_experiment_seed_validation[seeds1]
+FAILED tests/test_semantic_reconciliation.py::test_experiment_seed_validation[seeds2]
+FAILED tests/test_semantic_reconciliation.py::test_experiment_seed_validation[seeds3]
+FAILED tests/test_semantic_reconciliation.py::test_safe_experiment_names[..]
+FAILED tests/test_semantic_reconciliation.py::test_safe_experiment_names[../bad]
+FAILED tests/test_semantic_reconciliation.py::test_safe_experiment_names[bad/name]
+FAILED tests/test_semantic_reconciliation.py::test_safe_experiment_names[bad\\name]
+FAILED tests/test_semantic_reconciliation.py::test_safe_experiment_names[] - ...
+FAILED tests/test_semantic_reconciliation.py::test_output_preflight_and_manifest_provenance
+FAILED tests/test_semantic_reconciliation.py::test_invalid_recording_budget_and_foreign_condition_write_nothing
+FAILED tests/test_semantic_reconciliation.py::test_legacy_manifest_does_not_attribute_an_unrelated_git_parent
+FAILED tests/test_semantic_reconciliation.py::test_experiment_generations_reject_before_write[0]
+FAILED tests/test_semantic_reconciliation.py::test_experiment_generations_reject_before_write[-1]
+FAILED tests/test_semantic_reconciliation.py::test_experiment_generations_reject_before_write[True]
+FAILED tests/test_semantic_reconciliation.py::test_experiment_generations_reject_before_write[1.5]
+FAILED tests/test_semantic_reconciliation.py::test_invalid_serialized_history_counters_reject[node_counter-True]
+FAILED tests/test_semantic_reconciliation.py::test_invalid_serialized_history_counters_reject[innovation_counter-99]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate-empty]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate-ragged]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate-order]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate-missing]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate-nan]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate-inf]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate_condition-empty]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate_condition-ragged]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate_condition-order]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate_condition-missing]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate_condition-nan]
+FAILED tests/test_semantic_reconciliation.py::test_aggregation_rejects_invalid_trials[aggregate_condition-inf]
+FAILED tests/test_semantic_reconciliation.py::test_legacy_recorder_evaluated_fitness_and_versions
+FAILED tests/test_semantic_reconciliation.py::test_exhausted_reproduction_removes_body_but_preserves_birth[0]
+FAILED tests/test_semantic_reconciliation.py::test_exhausted_reproduction_removes_body_but_preserves_birth[1]
+FAILED tests/test_semantic_reconciliation.py::test_benchmark_invalid_budgets[0]
+FAILED tests/test_semantic_reconciliation.py::test_benchmark_invalid_budgets[-1]
+FAILED tests/test_semantic_reconciliation.py::test_benchmark_invalid_budgets[True]
+FAILED tests/test_semantic_reconciliation.py::test_scientific_regime_replay_guard
+FAILED tests/test_reconciled_viewers.py::test_world_orientation_and_control_state
+FAILED tests/test_reconciled_viewers.py::test_tui_cell_width_selection_cursor_and_fitness_labels
+FAILED tests/test_reconciled_viewers.py::test_invalid_tui_fps_fails_before_terminal_setup[0]
+FAILED tests/test_reconciled_viewers.py::test_invalid_tui_fps_fails_before_terminal_setup[-1]
+FAILED tests/test_reconciled_viewers.py::test_invalid_tui_fps_fails_before_terminal_setup[nan]
+FAILED tests/test_reconciled_viewers.py::test_invalid_tui_fps_fails_before_terminal_setup[inf]
+FAILED tests/test_reconciled_viewers.py::test_network_legend_unwired_labels_and_export_alias
+FAILED tests/test_reconciled_viewers.py::test_unknown_metric_rejected_and_table_transposed
+FAILED tests/test_reconciled_viewers.py::test_actual_pty_handles_queued_and_fragmented_keys
+66 failed, 7 passed, 1 warning in 4.25s

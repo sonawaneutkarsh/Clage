@@ -1,0 +1,88 @@
+[WebServer] INFO:     Started server process [88522]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8876 (Press CTRL+C to quit)
+
+Running 21 tests using 1 worker
+
+(node:88523) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:65521 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   1 tests/browser/navigation.spec.js:14:1 › nested inspectors return in order with selection, follow, camera and settings intact (779ms)
+[WebServer] INFO:     127.0.0.1:65525 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   2 tests/browser/navigation.spec.js:59:1 › top-level navigation, brand and browser history never reload the simulation (382ms)
+[WebServer] INFO:     127.0.0.1:65529 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   3 tests/browser/navigation.spec.js:80:1 › dialogs have consistent Back and Escape, including browser forward and mobile (374ms)
+[WebServer] INFO:     127.0.0.1:65533 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49152 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   4 tests/browser/navigation.spec.js:102:1 › champion and ancestry paths return to the exact evolutionary focus (564ms)
+[WebServer] INFO:     127.0.0.1:49156 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   5 tests/browser/navigation.spec.js:125:1 › replay return restores live inspection and clears comparison legend (457ms)
+[WebServer] INFO:     127.0.0.1:49162 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   6 tests/browser/navigation.spec.js:144:1 › history cannot resurrect a previous run body or stale ancestry metadata (324ms)
+[WebServer] INFO:     127.0.0.1:49166 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   7 tests/browser/navigation.spec.js:155:1 › navigation preserves a running worker and final-review screens at multiple sizes (1.5s)
+[WebServer] INFO:     127.0.0.1:49171 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49172 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   8 tests/browser/navigation.spec.js:177:1 › keyboard graph inspection does not trigger playback and hash reload opens a top-level view (311ms)
+[WebServer] INFO:     127.0.0.1:49177 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   9 tests/browser/navigation.spec.js:195:1 › narrow neural graphs accept horizontal wheel scrolling without hijacking it as zoom (435ms)
+[WebServer] INFO:     127.0.0.1:49181 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49182 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  10 tests/browser/navigation.spec.js:206:1 › small-screen evolution, research, validation and comparison remain usable (785ms)
+[WebServer] INFO:     127.0.0.1:49188 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  11 tests/browser/navigation.spec.js:237:1 › starting a configured run clears stale replay comparison controls and old selections (626ms)
+[WebServer] INFO:     127.0.0.1:49193 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  12 tests/browser/navigation.spec.js:258:1 › world canvas fills its viewport on desktop and small screens (202ms)
+[WebServer] INFO:     127.0.0.1:49197 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  13 tests/browser/navigation.spec.js:271:1 › mobile nested Back remains on screen and returns to the previous scroll position (417ms)
+[WebServer] INFO:     127.0.0.1:49201 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  14 tests/browser/navigation.spec.js:290:1 › contradictory replay chronology and fitness summaries cannot replace the live view (394ms)
+[WebServer] INFO:     127.0.0.1:49206 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49210 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49211 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49214 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  15 tests/browser/performance.spec.js:4:1 › predeclared paused Canvas workloads: 72, 512, 1000, 2000 bodies (14.6s)
+[WebServer] INFO:     127.0.0.1:49218 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  16 tests/browser/studio.spec.js:30:1 › live controls, keyboard stepping, inspector, graph and screenshots (2.2s)
+[WebServer] INFO:     127.0.0.1:49222 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  17 tests/browser/studio.spec.js:64:1 › configuration validation, frozen definitions and browser presets (2.0s)
+[WebServer] INFO:     127.0.0.1:49227 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  18 tests/browser/studio.spec.js:84:1 › complete evolution, replay scrub, generation navigation and exports (2.6s)
+[WebServer] INFO:     127.0.0.1:49233 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  19 tests/browser/studio.spec.js:137:1 › research baselines, local save and responsive view (2.0s)
+[WebServer] INFO:     127.0.0.1:49238 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:49239 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  20 tests/browser/studio.spec.js:157:1 › large population, empty food and error handling (3.8s)
+[WebServer] INFO:     127.0.0.1:49245 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  21 tests/browser/studio.spec.js:177:1 › background multi-generation run stays interactive and finishes with evaluated history (6.7s)
+
+  21 passed (42.4s)

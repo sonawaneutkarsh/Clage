@@ -94,51 +94,68 @@ def run_generation(
     # ``world/recorder.py::record_generation_to_file`` calls it too, this single
     # choke point covers every world-driving path in the repo. The rule stays in
     # ``world``: ``neat`` is a generic engine and must not import ``world``.
-    _check_interface(population)
-    _check_capacity(population, config)
+    session = WorldSession(population, config, generation, recorder)
+    while session.tick < config.ticks:
+        session.step()
+    session.finish()
+    return session.organisms
 
-    rng = random.Random(config.world_rng_seed(generation))
-    world = World(config, rng)
 
-    organisms: List[Organism] = []
-    for genome in population:
-        cell = world.random_empty_cell()
-        assert cell is not None  # guaranteed by _check_capacity above
-        organism = Organism(genome, *cell, config)
-        world.place_organism(organism)
-        organisms.append(organism)
+class WorldSession:
+    """Incremental world retaining the batch placement, tick and RNG order."""
 
-    for _ in range(config.initial_food):
-        cell = world.random_empty_cell()
-        if cell is not None:
-            world.place_food(*cell)
-
-    if recorder is not None:
-        recorder.record_tick(world, organisms)
-
-    for _ in range(config.ticks):
-        newborns: List[Organism] = []
-        for organism in organisms:
-            if not organism.alive:
-                continue
-            child = organism.act(world, config)
-            if child is not None:
-                newborns.append(child)
-        organisms.extend(newborns)
-        world.regenerate_food()
+    def __init__(self, population, config, generation=0, recorder=None):
+        _check_interface(population)
+        _check_capacity(population, config)
+        self.population = population
+        self.config = config
+        self.generation = generation
+        self.recorder = recorder
+        self.tick = 0
+        self.world = World(config, random.Random(config.world_rng_seed(generation)))
+        self.organisms = []
+        for genome in population:
+            cell = self.world.random_empty_cell()
+            assert cell is not None
+            organism = Organism(genome, *cell, config)
+            self.world.place_organism(organism)
+            self.organisms.append(organism)
+        for _ in range(config.initial_food):
+            cell = self.world.random_empty_cell()
+            if cell is not None:
+                self.world.place_food(*cell)
         if recorder is not None:
-            recorder.record_tick(world, organisms)
+            recorder.record_tick(self.world, self.organisms)
 
-    best_per_genome: dict = {}
-    for organism in organisms:
-        score = fitness(organism.food_eaten, organism.age, organism.offspring)
-        genome = organism.genome
-        best_per_genome[genome] = max(best_per_genome.get(genome, 0.0), score)
+    def step(self):
+        if self.tick >= self.config.ticks:
+            return False
+        newborns = []
+        for organism in self.organisms:
+            if organism.alive:
+                child = organism.act(self.world, self.config)
+                if organism.capture_inference and organism.last_inference is not None:
+                    organism.last_inference['world_tick'] = self.tick + 1
+                if child is not None:
+                    newborns.append(child)
+        self.organisms.extend(newborns)
+        self.world.regenerate_food()
+        self.tick += 1
+        if self.recorder is not None:
+            self.recorder.record_tick(self.world, self.organisms)
+        return True
 
-    for genome in population:
-        genome.fitness = best_per_genome.get(genome, 0.0)
-
-    return organisms
+    def finish(self):
+        """Stamp scores without consuming randomness."""
+        best_per_genome = {}
+        for organism in self.organisms:
+            score = fitness(organism.food_eaten, organism.age, organism.offspring)
+            genome = organism.genome
+            best_per_genome[genome] = max(best_per_genome.get(genome, 0.0), score)
+        for genome in self.population:
+            genome.fitness = best_per_genome.get(genome, 0.0)
+        if self.recorder is not None:
+            self.recorder.finalize()
 
 
 def make_evaluator(config: EnvironmentConfig) -> Callable[[List[Genome], int], None]:

@@ -1,0 +1,12 @@
+✔ colors are stable for genome identities (0.283167ms)
+✔ layout includes hidden layers and ignores disabled edges (0.150625ms)
+✔ comparison never substitutes another generation or future frame (0.056125ms)
+✔ CSV describes actual sequence and all metric values (0.067541ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 34.202958

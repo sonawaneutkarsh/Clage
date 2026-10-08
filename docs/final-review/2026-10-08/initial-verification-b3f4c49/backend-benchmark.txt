@@ -1,0 +1,6 @@
+N=72 recording=False: 1353.8 ticks/s, init 0.033s
+N=72 recording=True: 778.1 ticks/s, init 0.033s
+N=512 recording=False: 171.3 ticks/s, init 0.066s
+N=512 recording=True: 107.7 ticks/s, init 0.065s
+N=1000 recording=False: 81.7 ticks/s, init 0.101s
+N=1000 recording=True: 54.7 ticks/s, init 0.131s

@@ -18,7 +18,7 @@ from .network_view import genome_figure
 __all__ = ["ACTION_LABELS", "FACING_VECTORS", "draw_frame", "export_tick", "WorldViewer"]
 
 ACTION_LABELS = {0: "MOVE", 1: "TURN_LEFT", 2: "TURN_RIGHT", 3: "EAT"}
-FACING_VECTORS = {"N": (0, 1), "E": (1, 0), "S": (0, -1), "W": (-1, 0)}
+FACING_VECTORS = {"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)}
 
 _GENOME_COLORS = plt.get_cmap("tab20")
 
@@ -40,7 +40,7 @@ def draw_frame(
 
     ax.clear()
     ax.set_xlim(-0.7, width - 0.3)
-    ax.set_ylim(-0.7, height - 0.3)
+    ax.set_ylim(height - 0.3, -0.7)
     ax.set_xticks(range(width))
     ax.set_yticks(range(height))
     ax.grid(True, color="0.85", linewidth=0.5)
@@ -116,6 +116,7 @@ class WorldViewer:
         self.ax = self.fig.add_subplot(1, 1, 1)
 
         self._build_controls()
+        draw_frame(self.ax, self.recording, 0)
         self._anim = FuncAnimation(
             self.fig, self._animate, interval=120, blit=False, cache_frame_data=False
         )
@@ -129,7 +130,7 @@ class WorldViewer:
         self.slider.on_changed(self._on_slider)
 
         play_ax = self.fig.add_axes((0.78, 0.045, 0.07, 0.04))
-        self.play_button = Button(play_ax, "play")
+        self.play_button = Button(play_ax, "pause")
         self.play_button.on_clicked(self._on_play)
 
         step_ax = self.fig.add_axes((0.86, 0.045, 0.07, 0.04))
@@ -142,7 +143,9 @@ class WorldViewer:
         if self.playing and self.tick_index < len(self.ticks) - 1:
             self.tick_index += 1
             self.slider.set_val(self.tick_index)
-        draw_frame(self.ax, self.recording, self.tick_index, self.selected)
+        if self.tick_index == len(self.ticks) - 1:
+            self.playing = False
+            self.play_button.label.set_text("play")
         return []
 
     def _on_slider(self, value: float) -> None:

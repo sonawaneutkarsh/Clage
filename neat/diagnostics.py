@@ -90,10 +90,13 @@ def species_report(
     report: List[Dict] = []
     for generation in range(generations):
         for genome in population:
-            genome.fitness = score(genome, rng)
+            genome.fitness = score(genome, generation)
 
         spe.speciate(population)
         spe.share_fitness()
+        if not spe.species:
+            spe.speciate(population)
+            spe.share_fitness()
         allocation = spe.allocate_offspring(population_size)
 
         report.append(

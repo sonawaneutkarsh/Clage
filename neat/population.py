@@ -21,8 +21,8 @@ One generation:
     generation, not the one that was measured.
 
 Invariants: population size is constant; offspring are structurally valid;
-best raw fitness is non-decreasing when ``elitism >= 1``; elites are never
-mutated.
+the archived best raw fitness is non-decreasing; elites are never mutated.
+Evaluated scores need not increase when evaluation worlds change.
 """
 
 from __future__ import annotations
@@ -60,11 +60,11 @@ def _require_int_at_least(owner: str, field: str, value: object, lowest: int) ->
 
 
 def _structure_signature(genome: Genome) -> tuple:
-    """Lightweight structural identity: size + innovation numbers."""
+    """Exact heritable identity, independent of list insertion order."""
     return (
-        len(genome.nodes),
-        len(genome.connections),
-        tuple(c.innovation for c in genome.connections),
+        tuple(sorted((node.id, node.node_type.name, node.bias) for node in genome.nodes.values())),
+        tuple(sorted((edge.innovation, edge.in_node, edge.out_node, edge.weight, edge.enabled)
+                     for edge in genome.connections)),
     )
 
 
@@ -87,6 +87,7 @@ class Population:
         initial_population: Optional[List[Genome]] = None,
         db: Optional[InnovationDB] = None,
         evaluator: Optional[EvaluatorFn] = None,
+        record_reproduction: bool = False,
     ) -> None:
         if fitness_fn is None and evaluator is None:
             raise ValueError("provide either fitness_fn (per-genome) or evaluator (batch)")
@@ -112,6 +113,9 @@ class Population:
 
         self.fitness_fn = fitness_fn
         self.evaluator = evaluator
+        self.record_reproduction = record_reproduction
+        self.reproduction_records: Dict[Genome, dict] = {}
+        self._best_origin: Optional[Genome] = None
         self.elitism = elitism
         self.crossover_rate = crossover_rate
         self.rng = rng or random.Random(seed)
@@ -138,6 +142,9 @@ class Population:
             ]
 
         self.generation: int = 0
+        if initial_population is not None and self.population_size != len(initial_population):
+            raise ValueError("population_size must match initial_population")
+        self.db.register_genomes(self.population)
         self.best_genome: Optional[Genome] = None
         self.best_fitness: float = float("-inf")
         self.best_generation: int = -1
@@ -155,6 +162,7 @@ class Population:
         per-generation values belong to ``statistics[-1]`` or ``evaluated_best_genome``,
         not to a scan of ``self.population``.
         """
+        _require_int_at_least("Population", "generations", generations, 0)
         for _ in range(generations):
             self._next_generation()
         return self._stats[-generations:] if generations else []
@@ -188,7 +196,9 @@ class Population:
     # ------------------------------------------------------------- lifecycle
 
     def _next_generation(self) -> None:
+        self.reproduction_records = {}
         self._evaluate()
+        self._archive_best()
         self.speciation.speciate(self.population)
         self.speciation.share_fitness()
         allocation = self.speciation.allocate_offspring(self.population_size)
@@ -201,6 +211,9 @@ class Population:
             self._reproduce_species(species, budget, next_population)
 
         self.population = self._guarantee_champion(next_population)
+        if self.record_reproduction:
+            self.reproduction_records = {genome: self.reproduction_records[genome]
+                                         for genome in self.population if genome in self.reproduction_records}
         self.generation += 1
         self._track_best_and_stats()
 
@@ -222,6 +235,7 @@ class Population:
             for g in next_population
         )
         if not present:
+            self._record_child(champion, [self._best_origin or self.best_genome], "champion_copy")
             if next_population:
                 worst = min(range(len(next_population)), key=lambda i: next_population[i].fitness)
                 next_population[worst] = champion
@@ -230,8 +244,10 @@ class Population:
 
         while len(next_population) < self.population_size:
             rescued = self.best_genome.copy()
+            before = rescued.copy() if self.record_reproduction else None
             apply_mutation(rescued, self.rng, self.db, self.mutation_config)
             rescued.validate()
+            self._record_child(rescued, [self._best_origin or self.best_genome], "champion_rescue", before)
             next_population.append(rescued)
         return next_population
 
@@ -286,23 +302,58 @@ class Population:
         budget: int,
         next_population: List[Genome],
     ) -> None:
-        elites = min(self.elitism, budget)
+        elites = min(self.elitism, budget, len(species.members))
         ranked = sorted(species.members, key=lambda g: g.fitness, reverse=True)
         for elite in ranked[:elites]:
-            next_population.append(elite.copy())
+            child = elite.copy()
+            self._record_child(child, [elite], "elite")
+            next_population.append(child)
 
         for _ in range(budget - elites):
             child = self._make_offspring(species)
+            before = child.copy() if self.record_reproduction else None
             apply_mutation(child, self.rng, self.db, self.mutation_config)
             child.validate()
+            if self.record_reproduction:
+                record = self.reproduction_records[child]
+                self._record_child(child, record["parents"], record["kind"], before)
             next_population.append(child)
 
     def _make_offspring(self, species: Species) -> Genome:
         if len(species.members) >= 2 and self.rng.random() < self.crossover_rate:
             parent_a = self._select_parent(species)
             parent_b = self._select_parent(species)
-            return crossover(parent_a, parent_b, self.rng)
-        return self._select_parent(species).copy()
+            child = crossover(parent_a, parent_b, self.rng)
+            self._record_child(child, [parent_a, parent_b], "crossover")
+            return child
+        parent = self._select_parent(species)
+        child = parent.copy()
+        self._record_child(child, [parent], "clone")
+        return child
+
+    def _record_child(self, child, parents, kind, before=None):
+        """Passive parent selection and net post-mutation genotype deltas."""
+        if not self.record_reproduction:
+            return
+        deltas = None
+        if before is not None:
+            old = {edge.innovation: edge for edge in before.connections}
+            new = {edge.innovation: edge for edge in child.connections}
+            deltas = {
+                "added_nodes": sorted(set(child.nodes) - set(before.nodes)),
+                "added_innovations": sorted(set(new) - set(old)),
+                "removed_innovations": sorted(set(old) - set(new)),
+                "weight_changes": [{"innovation": identity, "before": old[identity].weight,
+                                    "after": new[identity].weight}
+                                   for identity in sorted(set(old) & set(new)) if old[identity].weight != new[identity].weight],
+                "enabled_changes": [{"innovation": identity, "before": old[identity].enabled,
+                                     "after": new[identity].enabled}
+                                    for identity in sorted(set(old) & set(new)) if old[identity].enabled != new[identity].enabled],
+                "bias_changes": [{"node": identity, "before": before.nodes[identity].bias,
+                                  "after": child.nodes[identity].bias}
+                                 for identity in sorted(set(child.nodes) & set(before.nodes)) if child.nodes[identity].bias != before.nodes[identity].bias],
+            }
+        self.reproduction_records[child] = {"parents": parents, "kind": kind, "deltas": deltas}
 
     def _select_parent(self, species: Species) -> Genome:
         """Fitness-proportional roulette over the species' members."""
@@ -319,13 +370,16 @@ class Population:
 
     # ------------------------------------------------------------- tracking
 
-    def _track_best_and_stats(self) -> None:
+    def _archive_best(self) -> None:
         best = self._evaluated_best_genome
         if best is not None and (self.best_genome is None or best.fitness > self.best_fitness):
+            if self.record_reproduction:
+                self._best_origin = best
             self.best_genome = best.copy()
             self.best_fitness = best.fitness
-            self.best_generation = self.generation
+            self.best_generation = self.generation + 1
 
+    def _track_best_and_stats(self) -> None:
         self._stats.append(
             {
                 "generation": self.generation,
