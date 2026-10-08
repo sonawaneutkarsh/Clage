@@ -6,6 +6,7 @@ import copy
 import hashlib
 import json
 import math
+import platform
 import random
 import subprocess
 import threading
@@ -105,6 +106,7 @@ def provenance():
         engine_version = "source-checkout"
     return {"engine_version": engine_version, "commit": commit, "dirty": dirty,
             "source_sha256": digest.hexdigest(),
+            "python": platform.python_version(), "platform": platform.platform(),
             "evolution_definition": "neat-reconciled-v1",
             "observation_definition": "world-observations-v2-odd-boundaries",
             "studio_contract": "1.0-slice-v2", "created": datetime.now(timezone.utc).isoformat(),

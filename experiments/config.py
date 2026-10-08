@@ -116,8 +116,8 @@ class ExperimentConfig:
         generations = self.base.get("neat", {}).get("generations", 1)
         if isinstance(generations, bool) or not isinstance(generations, int) or generations < 1:
             raise ValueError("generations must be a positive integer")
-        # The unknown-parameter check stays FIRST and verbatim. Ordering is
-        # deliberate: a config with a single non-control condition has zero
+        # The unknown-parameter check precedes control-count validation.
+        # A config with a single non-control condition has zero
         # controls, so the control-count rule below would otherwise shadow the
         # real problem (an unknown parameter) with a secondary one.
         for condition in self.conditions:
