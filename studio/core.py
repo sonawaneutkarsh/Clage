@@ -314,6 +314,9 @@ def validate_replay(data):
             raise ValueError("History references unavailable champion/generation")
         if len(row.fitnesses) != config.population:
             raise ValueError("History fitness count differs from founder population")
+        if (not math.isclose(row.best_fitness, max(row.fitnesses), rel_tol=1e-12, abs_tol=1e-12)
+                or not math.isclose(row.mean_fitness, sum(row.fitnesses) / len(row.fitnesses), rel_tol=1e-12, abs_tol=1e-12)):
+            raise ValueError("History fitness summary disagrees with evaluated founder scores")
     species = data.get("species")
     if not isinstance(species, dict) or any(key not in genomes or type(value) is not int or value < 0 for key, value in species.items()):
         raise ValueError("Invalid species mapping")
@@ -327,6 +330,8 @@ def validate_replay(data):
             raise ValueError("Invalid frame tick")
         if type(frame.get("generation")) is not int or not 0 <= frame["generation"] < config.generations:
             raise ValueError("Invalid frame generation")
+        if frame["sequence"] != frame["generation"] * (config.ticks + 1) + frame["tick"]:
+            raise ValueError("Frame sequence, generation and tick disagree with the recorded timeline")
         bodies = frame.get("organisms")
         if not isinstance(bodies, list) or len(bodies) > config.width * config.height * (config.ticks + 1):
             raise ValueError("Invalid organism table")

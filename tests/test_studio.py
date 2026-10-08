@@ -202,6 +202,36 @@ def test_api_control_stream_export_import_and_artifact(tmp_path):
         assert client.post('/api/runs', json={**tiny().model_dump(), 'unknown': True}).status_code == 422
 
 
+@pytest.mark.parametrize("field", ["sequence", "tick", "generation", "mean_fitness", "best_fitness"])
+def test_replay_rejects_contradictory_timeline_and_fitness_summaries(field, tmp_path):
+    experiment = Experiment(tiny())
+    while experiment.advance():
+        pass
+    replay = experiment.bundle()
+    validate_replay(replay)
+    corrupted = copy.deepcopy(replay)
+    if field in {"mean_fitness", "best_fitness"}:
+        corrupted["history"][0][field] += 100
+        message = "fitness summary"
+    elif field == "sequence":
+        for frame in corrupted["frames"]:
+            frame["sequence"] += 1
+        message = "timeline"
+    else:
+        corrupted["frames"][0][field] += 1
+        message = "timeline"
+    with pytest.raises(ValueError, match=message):
+        validate_replay(corrupted)
+    with TestClient(create_app(worker=False, artifact_dir=tmp_path)) as client:
+        client.post('/api/runs', json=tiny().model_dump()).raise_for_status()
+        before = client.get('/api/state').json()
+        assert client.post('/api/replay/validate', json=replay).status_code == 200
+        rejected = client.post('/api/replay/validate', json=corrupted)
+        assert rejected.status_code == 422
+        assert message in rejected.json()['detail']
+        assert client.get('/api/state').json() == before
+
+
 def test_origin_protection(tmp_path):
     with TestClient(create_app(worker=False, artifact_dir=tmp_path)) as client:
         assert client.post('/api/runs', json=tiny().model_dump(), headers={'Origin': 'https://evil.example'}).status_code == 403

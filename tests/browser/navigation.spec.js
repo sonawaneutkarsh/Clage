@@ -281,3 +281,19 @@ test('mobile nested Back remains on screen and returns to the previous scroll po
   await expect(page.locator('#ecosystem-view')).toBeVisible();
   expect(Math.abs(await page.evaluate(() => window.scrollY) - sourceScroll)).toBeLessThanOrEqual(2);
 });
+
+test('contradictory replay chronology and fitness summaries cannot replace the live view', async ({ page, request }) => {
+  await request.post('/api/runs', { data: { ...config, ticks: 3 } });
+  for (let tick = 0; tick < 3; tick++) await request.post('/api/control', { data: { action: 'step' } });
+  await expect(page.locator('#tick')).toContainText('tick 3 /');
+  const replay = await (await request.get('/api/replay')).json();
+  for (const field of ['tick', 'mean_fitness']) {
+    const corrupted = structuredClone(replay);
+    if (field === 'tick') corrupted.frames[0].tick = 1;
+    else corrupted.history[0].mean_fitness += 100;
+    await page.locator('#import').setInputFiles({ name: 'contradictory.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(corrupted)) });
+    await expect(page.locator('#toast')).toContainText(field === 'tick' ? 'timeline' : 'fitness summary');
+    await expect(page.locator('#mode')).toContainText('LIVE · PAUSED');
+    await expect(page.locator('#timeline')).toBeHidden();
+  }
+});
