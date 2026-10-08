@@ -38,6 +38,8 @@ def reproduce(bundle):
             'method': 'rerun from frozen config/seed, NOT resume from replay',
             'source_commit': bundle.get('metadata', {}).get('commit'),
             'current_commit': experiment.metadata['commit'],
+            'source_sha256': bundle.get('metadata', {}).get('source_sha256'),
+            'current_source_sha256': experiment.metadata['source_sha256'],
             'current_dirty': experiment.metadata['dirty']}
 
 

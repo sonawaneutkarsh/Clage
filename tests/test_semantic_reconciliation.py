@@ -348,7 +348,10 @@ def test_scientific_regime_replay_guard():
     while experiment.advance():
         pass
     data = experiment.bundle()
-    assert reproduce(data)["recorded_frames_verified"] == len(data["frames"])
+    verification = reproduce(data)
+    assert verification["recorded_frames_verified"] == len(data["frames"])
+    assert len(verification["source_sha256"]) == 64
+    assert verification["source_sha256"] == verification["current_source_sha256"]
     data["metadata"].pop("evolution_definition")
     with pytest.raises(ValueError, match="Scientific definition"):
         reproduce(data)

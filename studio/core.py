@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import math
 import random
@@ -78,8 +79,17 @@ class RunConfig(BaseModel):
 
 
 def provenance():
+    source = Path(__file__).resolve().parents[1]
+    digest = hashlib.sha256()
+    for package in ("neat", "world", "diversity", "experiments", "studio", "visual", "benchmarks"):
+        for path in sorted((source / package).rglob("*.py")):
+            digest.update(str(path.relative_to(source)).encode())
+            digest.update(path.read_bytes())
+    for path in sorted((source / "studio" / "static").glob("*")):
+        if path.is_file():
+            digest.update(str(path.relative_to(source)).encode())
+            digest.update(path.read_bytes())
     try:
-        source = Path(__file__).resolve().parents[1]
         repository = subprocess.check_output(["git", "-C", str(source), "rev-parse", "--show-toplevel"],
                                               text=True, stderr=subprocess.DEVNULL).strip()
         if Path(repository).resolve() != source:
@@ -94,6 +104,7 @@ def provenance():
     except PackageNotFoundError:
         engine_version = "source-checkout"
     return {"engine_version": engine_version, "commit": commit, "dirty": dirty,
+            "source_sha256": digest.hexdigest(),
             "evolution_definition": "neat-reconciled-v1",
             "observation_definition": "world-observations-v2-odd-boundaries",
             "studio_contract": "1.0-slice-v2", "created": datetime.now(timezone.utc).isoformat(),
