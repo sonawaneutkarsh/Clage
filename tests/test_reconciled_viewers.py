@@ -85,3 +85,53 @@ def test_unknown_metric_rejected_and_table_transposed(tmp_path):
     assert table[(0, 0)].get_text().get_text() == "parameter"
     assert table[(0, 1)].get_text().get_text() == "control"
     plt.close("all")
+
+
+def test_actual_pty_handles_queued_and_fragmented_keys(recording, tmp_path):
+    import os
+    import pty
+    import select
+    import subprocess
+    import sys
+    import time
+
+    for tick in recording["ticks"]:
+        tick["organisms"][0].update(x=1, y=1, alive=True)
+    path = tmp_path / "replay.json"
+    path.write_text(json.dumps(recording))
+    master, slave = pty.openpty()
+    process = subprocess.Popen([sys.executable, "-m", "visual", "tui", "--recording", str(path),
+                                "--fps", "30"], stdin=slave, stdout=slave, stderr=slave)
+    os.close(slave)
+    received = b""
+    def read_until(predicate):
+        nonlocal received
+        deadline = time.monotonic() + 3
+        while not predicate(received) and time.monotonic() < deadline:
+            if select.select([master], [], [], 0.1)[0]:
+                received += os.read(master, 65536)
+        assert predicate(received)
+    try:
+        read_until(lambda output: b"CLAGE" in output)
+        os.write(master, b" ds\r")
+        read_until(lambda output: b"Body:     0" in output)
+        os.write(master, b"\x1b")
+        time.sleep(0.08)
+        os.write(master, b"[Dd\r")
+        time.sleep(0.08)
+        os.write(master, b"q")
+        deadline = time.monotonic() + 3
+        while process.poll() is None and time.monotonic() < deadline:
+            if select.select([master], [], [], 0.1)[0]:
+                try:
+                    received += os.read(master, 65536)
+                except OSError:
+                    break
+        process.wait(timeout=3)
+        assert process.returncode == 0
+        assert b"Traceback" not in received
+    finally:
+        if process.poll() is None:
+            process.terminate()
+            process.wait(timeout=3)
+        os.close(master)

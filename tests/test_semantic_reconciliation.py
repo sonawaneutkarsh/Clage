@@ -209,6 +209,34 @@ def test_output_preflight_and_manifest_provenance(tmp_path):
     assert (target / experiment.name / "control" / "0.json").read_bytes() == original
 
 
+def test_invalid_recording_budget_and_foreign_condition_write_nothing(tmp_path):
+    experiment, config = tiny_config(tmp_path)
+    target = tmp_path / "runs"
+    with pytest.raises(ValueError):
+        run_experiment(config, target, record_generation=2)
+    assert not target.exists()
+    with pytest.raises(ValueError):
+        run_condition(experiment, Condition("../foreign", None), target)
+    assert not target.exists()
+
+
+@pytest.mark.parametrize("generations", [0, -1, True, 1.5])
+def test_experiment_generations_reject_before_write(generations):
+    with pytest.raises(ValueError, match="generations"):
+        ExperimentConfig("safe", {"neat": {"generations": generations}},
+                         [Condition("control", None)], [0])
+
+
+@pytest.mark.parametrize("field,value", [("node_counter", True), ("innovation_counter", 99)])
+def test_invalid_serialized_history_counters_reject(field, value):
+    db = InnovationDB()
+    db.register_genomes([wired()])
+    data = db.to_dict()
+    data[field] = value
+    with pytest.raises(ValueError):
+        InnovationDB.from_dict(data)
+
+
 @pytest.mark.parametrize("mode", ["empty", "ragged", "order", "missing", "nan", "inf"])
 @pytest.mark.parametrize("aggregator", [aggregate, aggregate_condition])
 def test_aggregation_rejects_invalid_trials(mode, aggregator):

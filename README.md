@@ -224,6 +224,13 @@ for org in organisms:
 
 ## Design notes you should know
 
+Engine 0.4.1 semantically reconciles the recovered Work audit with Studio. Its
+corrected evolution is `neat-reconciled-v1`; historical results are not rewritten.
+Read [correctness notes](docs/correctness-notes.md) and
+[reconciliation evidence](CLAGE_RECONCILIATION_REPORT.md) for provenance, limits,
+and unchanged-budget benchmark results. Old replays remain viewable; rerunning
+them requires the original scientific source, not the newly corrected engine.
+
 - **Randomness is explicit.** The engine rng comes from `seed`; the world rng is
   derived per `(trial seed, generation)` via `EnvironmentConfig.world_rng_seed`.
   Same seed ⇒ identical results. Different trials are independent.

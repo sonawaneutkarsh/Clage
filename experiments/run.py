@@ -180,6 +180,8 @@ def run_condition(
     """
     condition_dir = out_dir / experiment.name / condition.name
     experiment._validate()
+    if condition not in experiment.conditions:
+        raise ValueError("condition must belong to the validated experiment")
     targets = [condition_dir / f"{seed}{suffix}" for seed in experiment.seeds
                for suffix in (".json", ".config.json")]
     if record_generation is not None:
@@ -244,7 +246,12 @@ def run_experiment(
     for condition in experiment.conditions:
         if condition.name in names:
             for seed in experiment.seeds:
-                resolve_config(experiment, condition, seed)
+                resolved = resolve_config(experiment, condition, seed)
+                _require_int_at_least("experiment", "generations", resolved.generations, 1)
+                if record_generation is not None:
+                    _require_int_at_least("experiment", "record_generation", record_generation, 0)
+                    if record_generation >= resolved.generations:
+                        raise ValueError("record_generation is outside the experiment budget")
     source = Path(__file__).resolve().parents[1]
     digest = hashlib.sha256()
     for package in ("neat", "world", "experiments", "diversity"):
