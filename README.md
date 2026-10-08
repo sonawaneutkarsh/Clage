@@ -2,12 +2,17 @@
 
 [![CI](https://github.com/sonawaneutkarsh/Clage/actions/workflows/ci.yml/badge.svg)](https://github.com/sonawaneutkarsh/Clage/actions/workflows/ci.yml)
 
-A from-scratch NEAT (NeuroEvolution of Augmenting Topologies) engine in a 2D world
-where neural organisms move, eat and reproduce. **Clage Studio** adds a local-first
-browser observatory: real-time Canvas rendering, instrumented neural inspection,
-evolutionary ancestry, experiment controls, analytics and validated replay.
-The original Python engine, seeded experiments and terminal/matplotlib viewers
-remain independently usable. No cloud account, API key or frontend build needed.
+Clage evolves neural agents in a 2D ecosystem where organisms move, eat and
+reproduce. Its from-scratch **NEAT (NeuroEvolution of Augmenting Topologies)**
+engine evolves both network structure and weights, without an ML framework.
+
+**Clage Studio 1.0** is an interactive browser workbench for watching that
+ecosystem, inspecting the networks behind each action, tracing evolutionary
+lineage, and running reproducible experiments. Live Canvas visualization,
+evolution history, analysis tools and deterministic replay make the simulation
+inspectable from individual neurons to whole populations. It runs locally with
+no cloud account, API key or frontend build. The Python engine, seeded experiments
+and terminal/matplotlib viewers also work independently.
 
 <img src="docs/final-review/2026-10-08/ecosystem.png" width="1100" alt="Clage Studio dark-mode ecosystem, organism inspector, playback controls and live charts">
 
@@ -15,7 +20,7 @@ remain independently usable. No cloud account, API key or frontend build needed.
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -e ".[dev,studio]"
+.venv/bin/pip install -e ".[studio]"
 .venv/bin/python -m studio
 # Open http://127.0.0.1:8765 — starts paused. Click Resume.
 ```
@@ -31,21 +36,35 @@ python3 -m venv .venv
 - **Replay/export:** bounded JSON/gzip archives, seeking, generation navigation,
   synchronized second-replay view, metrics CSV, chart/world PNG and champion JSON.
 
-**Scope:** a substantial tested Studio release candidate, not a declaration that
-all research-platform features are complete. One active run; replay is not a
-resumable checkpoint. Recording retains at most 600 frames / 16 MiB encoded JSON.
-Default Studio initialization is explicitly `dense-random-v1`, not the historical
-unwired `minimal-v1`. Reconciled engine version is 0.4.1; see `CLAGE_RECONCILIATION_REPORT.md`.
+Studio 1.0 was merged into `main` through [PR #1](https://github.com/sonawaneutkarsh/Clage/pull/1),
+with the reconciled 0.4.1 engine. The release supports one active run and bounded
+recording (at most 600 frames / 16 MiB encoded JSON). Replay supports deterministic
+reruns from configuration and seed; it is not a resumable checkpoint.
 
-[User/API/developer guide](docs/studio/GUIDE.md) ·
-[Architecture](CLAGE_STUDIO_ARCHITECTURE.md) ·
-[Implementation](CLAGE_STUDIO_IMPLEMENTATION_REPORT.md) ·
-[Tests](CLAGE_STUDIO_TEST_REPORT.md) ·
-[Performance](CLAGE_STUDIO_PERFORMANCE_REPORT.md) ·
-[Final release review](CLAGE_STUDIO_FINAL_REVIEW.md) ·
-[Merge preparation / CI](CLAGE_STUDIO_MERGE_REVIEW.md) ·
-[Scientific definitions](CLAGE_STUDIO_RESEARCH_NOTES.md) ·
-[Remaining work](CLAGE_STUDIO_REMAINING_WORK.md)
+For controls, experiments and exports, see the [Studio guide](docs/studio/GUIDE.md).
+
+## Current release validation
+
+The completed release passed **429 Python tests**, **4 JavaScript tests**, and
+**21 Playwright workflows**, with Ruff, mypy and
+[main-branch CI](https://github.com/sonawaneutkarsh/Clage/actions/runs/37787514978) passing.
+
+Controlled engine validation used the documented unchanged budget: **100 founders,
+seeds 0–4, 300 generations, and minimal initialization** (`minimal-v1`).
+
+| Problem | Solved | Generations to solve, seed order |
+|---|---|---|
+| OR | 5/5 | 9, 6, 5, 6, 8 |
+| AND | 5/5 | 6, 8, 7, 8, 17 |
+| XOR | 5/5 | 212, 125, 68, 143, 102 |
+| Sine | 0/5 | not solved in 300 (mean best training fitness 0.9195) |
+
+These results validate the engine on the specified tasks and seeds; they do not
+establish generalizable learning, learned foraging, cooperation or intelligence.
+Studio defaults to **dense-random initialization** (`dense-random-v1`), so these
+minimal-initialization benchmarks are not measurements of Studio's default
+ecosystem. The [merge verification](CLAGE_STUDIO_MERGE_REVIEW.md#unchanged-budget-engine-validation)
+records the setup and outcomes; the historical pre-Studio results below remain separate.
 
 ## Historical Results
 
@@ -102,15 +121,19 @@ python3 -m venv .venv
 .venv/bin/pytest --cov=neat --cov=world --cov=diversity --cov=experiments   # optional coverage
 ```
 
-Requires Python 3.10+. With `.[dev,studio]` installed, the release-review suite has
-**429 passing Python tests**, **4 JavaScript unit tests**, and **21 Playwright
-workflows**. CI runs lint, types and Python tests on Python 3.10/3.12, plus a
-separate Chromium job. See `CLAGE_STUDIO_FINAL_REVIEW.md` for the final local
-verification, screenshots, unchanged-budget benchmarks and known limitations;
-the pull request's checks provide the current remote CI status. Merge preparation
-adds a real Uvicorn WebSocket transport regression to the 428-test review suite.
+Requires Python 3.10+. CI runs Ruff, mypy and Python tests on Python 3.10/3.12,
+plus JavaScript and Playwright tests in a separate Chromium job. The
+[release review](CLAGE_STUDIO_FINAL_REVIEW.md) and
+[merge verification](CLAGE_STUDIO_MERGE_REVIEW.md) document installation checks,
+deterministic reruns, screenshots and known limitations. The CI badge above
+links to the latest remote status.
+
+To run all checks, install the development and Studio extras in the virtual
+environment, then activate it:
 
 ```bash
+.venv/bin/pip install -e ".[dev,studio]"
+source .venv/bin/activate
 python -m pytest -o addopts='' -q
 python -m ruff check .
 python -m mypy neat world diversity experiments benchmarks visual studio
@@ -121,9 +144,10 @@ npm run test:e2e
 ```
 
 Node is needed only for frontend testing, not for running Studio. Local validation
-used Python 3.13.6 and headless Chromium on macOS; see the test report for coverage
-and portability limitations. The engine/viewers only require matplotlib at runtime;
-Studio adds FastAPI/Uvicorn/Pydantic and its API test dependency.
+used Python 3.13.6 and headless Chromium on macOS; see the release reviews for coverage
+and portability limitations. The engine/viewers declare matplotlib as their
+runtime dependency. The optional Studio extra also installs FastAPI, Uvicorn,
+Pydantic, websockets and httpx.
 
 Note: the packages are installed as top-level modules (`neat`, `world`, ...), so use
 a dedicated virtual environment. `neat` would clash with `neat-python`.
@@ -297,3 +321,11 @@ tests/         Python tests, browser workflows and pure-JS tests
 docs/          correctness notes, Studio guide, screenshots and measured workloads
 results/       experiment and benchmark output (gitignored)
 ```
+
+## Documentation
+
+- [Studio user/API/developer guide](docs/studio/GUIDE.md) and [architecture](CLAGE_STUDIO_ARCHITECTURE.md)
+- [Final release review](CLAGE_STUDIO_FINAL_REVIEW.md) and [merge verification / CI](CLAGE_STUDIO_MERGE_REVIEW.md)
+- [Scientific definitions](CLAGE_STUDIO_RESEARCH_NOTES.md), [correctness notes](docs/correctness-notes.md) and [engine reconciliation](CLAGE_RECONCILIATION_REPORT.md)
+- [Performance measurements](CLAGE_STUDIO_PERFORMANCE_REPORT.md) and [remaining work](CLAGE_STUDIO_REMAINING_WORK.md)
+- Historical [implementation report](CLAGE_STUDIO_IMPLEMENTATION_REPORT.md) and [test report](CLAGE_STUDIO_TEST_REPORT.md)
