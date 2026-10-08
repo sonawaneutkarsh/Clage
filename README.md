@@ -98,10 +98,12 @@ python3 -m venv .venv
 .venv/bin/pytest --cov=neat --cov=world --cov=diversity --cov=experiments   # optional coverage
 ```
 
-Requires Python 3.10+. With `.[dev,studio]` installed, the local suite has **350
-passing Python tests**; Node has four unit tests and Playwright seven browser
-workflows. CI is configured for Python 3.10/3.12 and a separate Chromium job;
-the updated remote workflow has not been executed in this delivery.
+Requires Python 3.10+. With `.[dev,studio]` installed, the release-review suite has
+**428 passing Python tests**, **4 JavaScript unit tests**, and **21 Playwright
+workflows**. CI runs lint, types and Python tests on Python 3.10/3.12, plus a
+separate Chromium job. See `CLAGE_STUDIO_FINAL_REVIEW.md` for the final local
+verification, screenshots, unchanged-budget benchmarks and known limitations;
+the pull request's checks provide the current remote CI status.
 
 ```bash
 python -m pytest -o addopts='' -q
