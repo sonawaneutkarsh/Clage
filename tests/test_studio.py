@@ -2,6 +2,8 @@ import copy
 import gzip
 import json
 import random
+import socket
+import threading
 import time
 
 import pytest
@@ -200,6 +202,39 @@ def test_api_control_stream_export_import_and_artifact(tmp_path):
         assert client.post('/api/control', json={'action': 'reset'}).json()['frame']['tick'] == 0
         assert client.post('/api/control', json={'action': 'speed', 'speed': 121}).status_code == 422
         assert client.post('/api/runs', json={**tiny().model_dump(), 'unknown': True}).status_code == 422
+
+
+def test_real_uvicorn_websocket_stream_observes_http_changes(tmp_path):
+    import httpx
+    import uvicorn
+    from websockets.sync.client import connect
+
+    manager = Manager()
+    manager.create(tiny())
+    application = create_app(manager, worker=False, artifact_dir=tmp_path)
+    server = uvicorn.Server(uvicorn.Config(application, log_level="error"))
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen()
+        port = listener.getsockname()[1]
+        thread = threading.Thread(target=server.run, kwargs={"sockets": [listener]}, daemon=True)
+        thread.start()
+        try:
+            deadline = time.monotonic() + 10
+            while not server.started and thread.is_alive() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            assert server.started, "Uvicorn failed to start with the declared Studio dependencies"
+            origin = f"http://127.0.0.1:{port}"
+            with connect(f"ws://127.0.0.1:{port}/api/stream", origin=origin,
+                         open_timeout=5, close_timeout=2) as stream:
+                assert json.loads(stream.recv(timeout=5))["frame"]["tick"] == 0
+                response = httpx.post(f"{origin}/api/control", json={"action": "step"}, timeout=5)
+                assert response.status_code == 200
+                assert json.loads(stream.recv(timeout=5))["frame"]["tick"] == 1
+        finally:
+            server.should_exit = True
+            thread.join(timeout=10)
+        assert not thread.is_alive(), "Uvicorn did not shut down"
 
 
 @pytest.mark.parametrize("field", ["sequence", "tick", "generation", "mean_fitness", "best_fitness"])

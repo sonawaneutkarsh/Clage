@@ -102,11 +102,12 @@ python3 -m venv .venv
 ```
 
 Requires Python 3.10+. With `.[dev,studio]` installed, the release-review suite has
-**428 passing Python tests**, **4 JavaScript unit tests**, and **21 Playwright
+**429 passing Python tests**, **4 JavaScript unit tests**, and **21 Playwright
 workflows**. CI runs lint, types and Python tests on Python 3.10/3.12, plus a
 separate Chromium job. See `CLAGE_STUDIO_FINAL_REVIEW.md` for the final local
 verification, screenshots, unchanged-budget benchmarks and known limitations;
-the pull request's checks provide the current remote CI status.
+the pull request's checks provide the current remote CI status. Merge preparation
+adds a real Uvicorn WebSocket transport regression to the 428-test review suite.
 
 ```bash
 python -m pytest -o addopts='' -q
