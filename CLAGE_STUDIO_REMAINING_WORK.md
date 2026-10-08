@@ -4,7 +4,13 @@ The delivered application covers usable vertical slices rather than pretending
 the entire fifteen-phase vision is complete. These are not hidden placeholder
 controls: unimplemented operations are absent or explicitly unavailable.
 
-## Release blockers before claiming a complete 1.0 platform
+## Beyond the scoped Studio 1.0 release
+
+These are requirements for the broader research-platform roadmap, not unresolved
+release blockers for the documented single-run Studio 1.0 scope. The final review
+in `CLAGE_STUDIO_FINAL_REVIEW.md` assesses that scope separately. In particular,
+this release does not promise full archival recording, resumable checkpoints or
+simultaneous live experiments.
 
 1. **Full archival recording:** append-only compressed frame chunks, indexing,
    selective topology loading and seeks across entire long runs. Current recordings

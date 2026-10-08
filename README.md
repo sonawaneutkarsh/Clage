@@ -9,7 +9,7 @@ evolutionary ancestry, experiment controls, analytics and validated replay.
 The original Python engine, seeded experiments and terminal/matplotlib viewers
 remain independently usable. No cloud account, API key or frontend build needed.
 
-<img src="docs/studio/ecosystem.png" width="1100" alt="Clage Studio dark-mode ecosystem, organism inspector, playback controls and live charts">
+<img src="docs/final-review/2026-10-08/ecosystem.png" width="1100" alt="Clage Studio dark-mode ecosystem, organism inspector, playback controls and live charts">
 
 ## Start Clage Studio
 
@@ -42,15 +42,18 @@ unwired `minimal-v1`. Reconciled engine version is 0.4.1; see `CLAGE_RECONCILIAT
 [Implementation](CLAGE_STUDIO_IMPLEMENTATION_REPORT.md) ·
 [Tests](CLAGE_STUDIO_TEST_REPORT.md) ·
 [Performance](CLAGE_STUDIO_PERFORMANCE_REPORT.md) ·
+[Final release review](CLAGE_STUDIO_FINAL_REVIEW.md) ·
 [Scientific definitions](CLAGE_STUDIO_RESEARCH_NOTES.md) ·
 [Remaining work](CLAGE_STUDIO_REMAINING_WORK.md)
 
 ## Historical Results
 
 The following tables and interpretations are preserved from the pre-Studio
-README at `2105fee` (five seeds each). These scientific experiments were **not
-rerun during Studio development**. They are not results of the new dense-random
-Studio initialization. Keep their original configurations and definitions separate.
+README at `2105fee` (five seeds each). These tables retain their original
+pre-Studio measurements; current-source engine validation is recorded separately
+in the final release review. The environmental experiments were not rerun during
+Studio development. These are not results of the new dense-random Studio
+initialization. Keep their original configurations and definitions separate.
 
 **Engine validation** (`python -m benchmarks.run --problems or,and,xor,sin --trials 5 --generations 300`):
 
@@ -136,10 +139,13 @@ python -m benchmarks.run --problems or,and,xor,sin --trials 5 --generations 300
 included, 5 seeds each):
 
 ```bash
-python -m experiments.run --config experiments/configs/food_abundance.json --out results
 python -m experiments.run --config experiments/configs/food_abundance.json \
-       --out results --record-generation 9     # also record gen 9 for replay
+       --out results --record-generation 9     # optionally omit recording
 ```
+
+Raw results are overwrite-protected. Use a fresh output directory for every rerun
+(for example, `--out results-second-run`); do not rerun into the same experiment
+directory or delete historical artifacts just to reuse its path.
 
 Configs shipped: `base.json`, `food_abundance`, `food_regeneration`,
 `population_density`, `available_space`, `reproduction_cost`. Each condition
