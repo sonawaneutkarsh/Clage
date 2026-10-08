@@ -1,0 +1,88 @@
+
+> test:e2e
+> playwright test
+
+[WebServer] INFO:     Started server process [72326]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8876 (Press CTRL+C to quit)
+
+Running 7 tests using 1 worker
+
+(node:72327) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:62909 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:62912 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:62913 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:62918 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  1 tests/browser/performance.spec.js:4:1 › predeclared paused Canvas workloads: 72, 512, 1000, 2000 bodies (14.3s)
+[WebServer] INFO:     127.0.0.1:62924 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  2 tests/browser/studio.spec.js:30:1 › live controls, keyboard stepping, inspector, graph and screenshots (2.2s)
+[WebServer] INFO:     127.0.0.1:62934 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✘  3 tests/browser/studio.spec.js:64:1 › configuration validation, frozen definitions and browser presets (9.1s)
+(node:72371) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:62940 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  4 tests/browser/studio.spec.js:84:1 › complete evolution, replay scrub, generation navigation and exports (2.8s)
+[WebServer] INFO:     127.0.0.1:62951 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  5 tests/browser/studio.spec.js:137:1 › research baselines, local save and responsive view (2.0s)
+[WebServer] INFO:     127.0.0.1:62957 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:62959 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  6 tests/browser/studio.spec.js:157:1 › large population, empty food and error handling (3.6s)
+[WebServer] INFO:     127.0.0.1:62965 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  7 tests/browser/studio.spec.js:177:1 › background multi-generation run stays interactive and finishes with evaluated history (6.7s)
+
+
+  1) tests/browser/studio.spec.js:64:1 › configuration validation, frozen definitions and browser presets 
+
+    Error: expect(locator).not.toContainText(expected) failed
+
+    Locator: locator('#render-rate')
+    Expected substring: not "—"
+    Received string: "— render FPS"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "not toContainText" locator('#render-rate') with timeout 5000ms
+      - waiting for locator('#render-rate')
+        5 × locator resolved to <span id="render-rate">— render FPS</span>
+          - unexpected value "— render FPS"
+
+
+      11 |   await page.goto('/');
+      12 |   await expect(page.locator('#population')).not.toHaveText('—');
+    > 13 |   await expect(page.locator('#render-rate')).not.toContainText('—');
+         |                                                  ^
+      14 | });
+      15 |
+      16 | test.afterEach(async () => expect(pageErrors).toEqual([]));
+        at /private/tmp/clage-semantic-verify-20261007/tests/browser/studio.spec.js:13:50
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/studio-configuration-valid-04e7b-nitions-and-browser-presets/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/studio-configuration-valid-04e7b-nitions-and-browser-presets/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/studio-configuration-valid-04e7b-nitions-and-browser-presets/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/studio-configuration-valid-04e7b-nitions-and-browser-presets/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests/browser/studio.spec.js:64:1 › configuration validation, frozen definitions and browser presets 
+  6 passed (41.9s)
