@@ -1,0 +1,115 @@
+[WebServer] INFO:     Started server process [85515]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8876 (Press CTRL+C to quit)
+
+Running 16 tests using 1 worker
+
+(node:85516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:64095 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   1 tests/browser/navigation.spec.js:13:1 › nested inspectors return in order with selection, follow, camera and settings intact (712ms)
+[WebServer] INFO:     127.0.0.1:64099 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   2 tests/browser/navigation.spec.js:53:1 › top-level navigation, brand and browser history never reload the simulation (358ms)
+[WebServer] INFO:     127.0.0.1:64103 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   3 tests/browser/navigation.spec.js:74:1 › dialogs have consistent Back and Escape, including browser forward and mobile (353ms)
+[WebServer] INFO:     127.0.0.1:64107 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:64108 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   4 tests/browser/navigation.spec.js:96:1 › champion and ancestry paths return to the exact evolutionary focus (445ms)
+[WebServer] INFO:     127.0.0.1:64114 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   5 tests/browser/navigation.spec.js:119:1 › replay return restores live inspection and clears comparison legend (441ms)
+[WebServer] INFO:     127.0.0.1:64118 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   6 tests/browser/navigation.spec.js:138:1 › history cannot resurrect a previous run body or stale ancestry metadata (288ms)
+[WebServer] INFO:     127.0.0.1:64122 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   7 tests/browser/navigation.spec.js:149:1 › navigation preserves a running worker and final-review screens at multiple sizes (1.9s)
+[WebServer] INFO:     127.0.0.1:64126 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✘   8 tests/browser/navigation.spec.js:171:1 › keyboard graph inspection does not trigger playback and hash reload opens a top-level view (5.3s)
+(node:85545) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:64130 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:64133 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓   9 tests/browser/navigation.spec.js:185:1 › small-screen evolution, research, validation and comparison remain usable (849ms)
+[WebServer] INFO:     127.0.0.1:64137 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:64139 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:64141 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:64144 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  10 tests/browser/performance.spec.js:4:1 › predeclared paused Canvas workloads: 72, 512, 1000, 2000 bodies (14.4s)
+[WebServer] INFO:     127.0.0.1:64150 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  11 tests/browser/studio.spec.js:30:1 › live controls, keyboard stepping, inspector, graph and screenshots (2.2s)
+[WebServer] INFO:     127.0.0.1:64154 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  12 tests/browser/studio.spec.js:64:1 › configuration validation, frozen definitions and browser presets (1.9s)
+[WebServer] INFO:     127.0.0.1:64159 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  13 tests/browser/studio.spec.js:84:1 › complete evolution, replay scrub, generation navigation and exports (2.5s)
+[WebServer] INFO:     127.0.0.1:64165 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  14 tests/browser/studio.spec.js:137:1 › research baselines, local save and responsive view (2.0s)
+[WebServer] INFO:     127.0.0.1:64169 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+[WebServer] INFO:     127.0.0.1:64170 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  15 tests/browser/studio.spec.js:157:1 › large population, empty food and error handling (3.6s)
+[WebServer] INFO:     127.0.0.1:64175 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  16 tests/browser/studio.spec.js:177:1 › background multi-generation run stays interactive and finishes with evaluated history (6.5s)
+
+
+  1) tests/browser/navigation.spec.js:171:1 › keyboard graph inspection does not trigger playback and hash reload opens a top-level view
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('#network .node')
+    Expected: 13
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('#network .node') with timeout 5000ms
+      - waiting for locator('#network .node')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      179 |   await page.reload();
+      180 |   await expect(page.locator('#neural-view')).toBeVisible();
+    > 181 |   await expect(page.locator('#network .node')).toHaveCount(13);
+          |                                                ^
+      182 |   await expect(page.locator('#view-back')).toBeHidden();
+      183 | });
+      184 |
+        at /private/tmp/clage-final-review-20261008/tests/browser/navigation.spec.js:181:48
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-keyboard-graph--ab37c-load-opens-a-top-level-view/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-keyboard-graph--ab37c-load-opens-a-top-level-view/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-keyboard-graph--ab37c-load-opens-a-top-level-view/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-keyboard-graph--ab37c-load-opens-a-top-level-view/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests/browser/navigation.spec.js:171:1 › keyboard graph inspection does not trigger playback and hash reload opens a top-level view
+  15 passed (45.1s)

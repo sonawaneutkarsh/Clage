@@ -1,0 +1,52 @@
+[WebServer] INFO:     Started server process [86037]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8876 (Press CTRL+C to quit)
+
+Running 1 test using 1 worker
+
+(node:86038) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:64511 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✘  1 tests/browser/navigation.spec.js:238:1 › world canvas fills its viewport on desktop and small screens (264ms)
+
+
+  1) tests/browser/navigation.spec.js:238:1 › world canvas fills its viewport on desktop and small screens
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Array [
+        360,
+    -   360,
+    +   182,
+      ]
+
+      243 |       return { canvas: [canvas.clientWidth, canvas.clientHeight], wrap: [wrap.clientWidth, wrap.clientHeight] };
+      244 |     });
+    > 245 |     expect(dimensions.canvas).toEqual(dimensions.wrap);
+          |                               ^
+      246 |     expect(dimensions.canvas[1]).toBeGreaterThanOrEqual(360);
+      247 |     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      248 |   }
+        at /private/tmp/clage-final-release-20261008/tests/browser/navigation.spec.js:245:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-world-canvas-fi-f9988-n-desktop-and-small-screens/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-world-canvas-fi-f9988-n-desktop-and-small-screens/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-world-canvas-fi-f9988-n-desktop-and-small-screens/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-world-canvas-fi-f9988-n-desktop-and-small-screens/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests/browser/navigation.spec.js:238:1 › world canvas fills its viewport on desktop and small screens

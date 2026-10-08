@@ -1,0 +1,14 @@
+[WebServer] INFO:     Started server process [86084]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8876 (Press CTRL+C to quit)
+
+Running 1 test using 1 worker
+
+(node:86086) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] INFO:     127.0.0.1:64542 - "WebSocket /api/stream" [accepted]
+[WebServer] INFO:     connection open
+  ✓  1 tests/browser/navigation.spec.js:238:1 › world canvas fills its viewport on desktop and small screens (251ms)
+
+  1 passed (898ms)

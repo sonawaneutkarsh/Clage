@@ -1,0 +1,12 @@
+Processing ./.
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: clage
+  Building wheel for clage (pyproject.toml): started
+  Building wheel for clage (pyproject.toml): finished with status 'done'
+  Created wheel for clage: filename=clage-0.4.1-py3-none-any.whl size=138395 sha256=49946d20fd23084ae3a837c96e4faaab7b3ce06773f2aaac2574e5f4514737be
+  Stored in directory: /private/var/folders/hs/91f7c6dj06dc5212sgtvy7x80000gn/T/pip-ephem-wheel-cache-279bg7ym/wheels/2e/5f/bf/7db3332bfd24c4da5118ee21671f176dedc8329a262a5fb471
+Successfully built clage
+Processing /private/tmp/clage-final-wheel-20261008/clage-0.4.1-py3-none-any.whl
+Installing collected packages: clage
+Successfully installed clage-0.4.1

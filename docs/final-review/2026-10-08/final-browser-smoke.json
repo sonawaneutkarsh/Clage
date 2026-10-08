@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "browser": "153.0.8010.12",
+  "baseURL": "http://127.0.0.1:8880",
+  "errors": [],
+  "downloads": [
+    {
+      "filename": "clage-champion.json",
+      "bytes": 8704,
+      "sha256": "4a7c54ef7f66922bdaf7f847cba37861f1b92363d28cc1c5959ff8bd9da3700d"
+    },
+    {
+      "filename": "clage-heldout-evaluation.json",
+      "bytes": 12249,
+      "sha256": "4bdf2d97502639ee6536436c14aec54c9777e7e1bd9c7ce6811ef922bc7a0123"
+    },
+    {
+      "filename": "clage-metrics.csv",
+      "bytes": 473,
+      "sha256": "009998681302fabee0fd52b3f92dd58693cf3475ad21128044e38e071e78401d"
+    },
+    {
+      "filename": "clage-chart.png",
+      "bytes": 15811,
+      "sha256": "b53f9b7f1518dfa52a1d411735654cb8cc3f38cea31e6e14729332561e46783f"
+    },
+    {
+      "filename": "clage-world.png",
+      "bytes": 41078,
+      "sha256": "b46d4427c65c677085043b2bbdf1207bee46f957a4e1c7dfa7d4943b4260b640"
+    },
+    {
+      "filename": "clage-replay.json",
+      "bytes": 2871612,
+      "sha256": "5efbbf56c42a7e890dcb3d870cac5bba4977c8f96aa94aedeb1cab4c74327b27"
+    }
+  ],
+  "screenshots": [
+    "smoke-body-lineage.png",
+    "smoke-live.png",
+    "smoke-connection.png",
+    "smoke-genome-comparison.png",
+    "smoke-evolution.png",
+    "smoke-research.png",
+    "smoke-replay-comparison.png",
+    "smoke-mobile-replay.png",
+    "smoke-mobile-neural-scrolled.png"
+  ],
+  "method": "Actual headless Chromium UI interactions, three 20-tick generations; separate full-default deterministic validation is recorded elsewhere."
+}
