@@ -49,6 +49,11 @@ test('nested inspectors return in order with selection, follow, camera and setti
   await page.goForward();
   await expect(page.locator('#body-choice')).toHaveValue('0');
   await expect(page.locator('#view-back')).toHaveText('← Back to ecosystem');
+  await page.locator('#body-choice').selectOption('');
+  await expect(page.locator('#organism')).toContainText('Meet an organism');
+  await expect(page.locator('#follow')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#view-back')).toBeHidden();
+  await expect(page.locator('#tick')).toHaveText(tick);
 });
 
 test('top-level navigation, brand and browser history never reload the simulation', async ({ page, request }) => {

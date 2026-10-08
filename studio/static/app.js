@@ -699,7 +699,12 @@ let replayIdentity = 0;
 const backButton = element('button', { id: 'view-back', class: 'button secondary back-button', hidden: '' }, '← Back');
 const bodyChoice = element('select', { id: 'body-choice', 'aria-label': 'Select organism for inspection' });
 document.querySelector('.inspector-heading').after(bodyChoice);
-bodyChoice.onchange = () => { if (bodyChoice.value !== '') selectBody(Number(bodyChoice.value)); };
+bodyChoice.onchange = () => {
+  if (bodyChoice.value !== '') { selectBody(Number(bodyChoice.value)); return; }
+  selected = null; following = false; trail = [];
+  if (view === 'ecosystem') { navigation.nested = false; navigation.detail = false; backButton.hidden = true; }
+  updateUI(); drawNetworks(); drawHistory(); rememberNavigation();
+};
 document.querySelector('.page-heading').before(backButton);
 $('view-title').tabIndex = -1;
 $('network-detail').tabIndex = -1;
