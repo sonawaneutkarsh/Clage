@@ -27,7 +27,8 @@ def _node_color(node_type: str) -> str:
 def draw_genome(ax, genome: Dict[str, Any]) -> None:
     """Draw one genome onto ``ax``. Returns nothing (mutates the axes)."""
     nodes = {node["id"]: node for node in genome["nodes"]}
-    positions = layered_layout(genome)
+    positions = {identity: (x * 3, y * 1.5)
+                 for identity, (x, y) in layered_layout(genome).items()}
 
     for conn in genome["connections"]:
         (x0, y0) = positions[conn["in"]]
@@ -45,7 +46,7 @@ def draw_genome(ax, genome: Dict[str, Any]) -> None:
         x, y = positions[node_id]
         ax.scatter([x], [y], s=500, color=_node_color(node["type"]), zorder=3)
         ax.text(x, y, f"{node_id}", ha="center", va="center", fontsize=8, color="white", zorder=4)
-        ax.text(x, y - 0.3, f"b={node['bias']:.2f}", ha="center", va="center", fontsize=7, zorder=4)
+        ax.text(x, y - 0.6, f"b={node['bias']:.2f}", ha="center", va="center", fontsize=7, zorder=4)
 
     ax.set_xlim(-0.6, max(p[0] for p in positions.values()) + 0.6)
     ax.set_ylim(-(max(p[1] for p in positions.values()) + 1.2),
@@ -62,8 +63,13 @@ def draw_genome(ax, genome: Dict[str, Any]) -> None:
 
 def genome_figure(genome: Dict[str, Any], title: Optional[str] = None) -> plt.Figure:
     """Return a standalone figure of the genome's network."""
-    fig, ax = plt.subplots(figsize=(7, 4), constrained_layout=True)
+    positions = layered_layout(genome)
+    layer_counts = {}
+    for x, _ in positions.values():
+        layer_counts[x] = layer_counts.get(x, 0) + 1
+    height = max(4, max(layer_counts.values(), default=1) * 0.55 + 1)
+    fig, ax = plt.subplots(figsize=(7, height), constrained_layout=True)
     draw_genome(ax, genome)
     if title:
-        ax.set_title(title, fontsize=10)
+        fig.suptitle(title, fontsize=10)
     return fig

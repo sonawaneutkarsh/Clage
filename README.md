@@ -199,7 +199,8 @@ from neat import Population
 def fitness(genome, generation):
     return float(len(genome.connections))
 
-pop = Population(fitness, population_size=50, seed=0)
+pop = Population(fitness, population_size=50, seed=0,
+                 input_ids=list(range(9)), output_ids=[10, 11, 12, 13])
 pop.run(20)
 ```
 
@@ -217,6 +218,7 @@ outputs = net.activate([0.5, -0.2, 0.1, 0.0, 0.9, 0.3, 0.2, 1.0, 0.0])  # 9 obs 
 ```python
 from world import run_generation
 
+population_genomes = pop.population
 organisms = run_generation(population_genomes, config, generation=3)
 for org in organisms:
     org.x, org.y, org.energy, org.food_eaten, org.age, org.offspring, org.alive
