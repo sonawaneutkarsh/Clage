@@ -43,6 +43,7 @@ unwired `minimal-v1`. Reconciled engine version is 0.4.1; see `CLAGE_RECONCILIAT
 [Tests](CLAGE_STUDIO_TEST_REPORT.md) ·
 [Performance](CLAGE_STUDIO_PERFORMANCE_REPORT.md) ·
 [Final release review](CLAGE_STUDIO_FINAL_REVIEW.md) ·
+[Merge preparation / CI](CLAGE_STUDIO_MERGE_REVIEW.md) ·
 [Scientific definitions](CLAGE_STUDIO_RESEARCH_NOTES.md) ·
 [Remaining work](CLAGE_STUDIO_REMAINING_WORK.md)
 

@@ -1,5 +1,10 @@
 # Clage Studio implementation report
 
+This report preserves the initial implementation milestone. Subsequent semantic
+reconciliation, release QA and merge preparation are documented in
+`CLAGE_RECONCILIATION_REPORT.md`, `CLAGE_STUDIO_FINAL_REVIEW.md` and
+`CLAGE_STUDIO_MERGE_REVIEW.md`; use those for current verification and recovery status.
+
 Delivered October 7, 2026 on `studio/clage-1.0`. This is a working, tested local
 Studio release candidate, **not completion of every requested platform phase**.
 Engine version remains 0.3.0; API is `1.0-slice`, replay version 2.

@@ -1,5 +1,11 @@
 # Clage Studio 1.0 — final release review
 
+Merge-preparation follow-up: Linux CI exposed an undeclared WebSocket transport
+dependency that the original developer environment masked. It is corrected and
+covered by a real Uvicorn streaming regression (429 total Python tests). See
+`CLAGE_STUDIO_MERGE_REVIEW.md` for fresh-environment verification and PR CI status;
+the original measurements and review evidence below remain preserved.
+
 Review date: **2026-10-08 UTC**. Scope: stabilization of the existing local-first
 Studio release candidate, not the remaining platform roadmap.
 

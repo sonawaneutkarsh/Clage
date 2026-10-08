@@ -2,10 +2,14 @@
 
 ## Preserved engine and scientific definitions
 
-The NEAT implementation is still from scratch. Studio does not substitute a
-third-party optimizer or change the historical observation/action/fitness
-definitions. Old results and their caveats remain in the README; no historical
-sweep or OR/AND/XOR/sin result was recomputed during this delivery.
+The NEAT implementation is still from scratch; Studio does not substitute a
+third-party optimizer. Historical results and their caveats remain preserved in
+the README. Reconciliation corrected engine behavior and odd-grid boundary
+sensing, versioned as `neat-reconciled-v1` and
+`world-observations-v2-odd-boundaries`; the four actions and `world-fitness-v1`
+formula remain unchanged. Historical environmental sweeps were not rerun.
+Current-source OR/AND/XOR/sine validation is recorded separately in the final
+release review and merge-preparation evidence; it does not replace old results.
 
 **Observations:** nearest-food normalized Δx/Δy, local food/body density, energy,
 wall proximity x/y, previous MOVE/EAT. Body facing is not an input. Actions are

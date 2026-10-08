@@ -1,5 +1,9 @@
 # Clage Studio test report
 
+This is the historical initial implementation verification, not the current
+release test count. See `CLAGE_STUDIO_FINAL_REVIEW.md` and
+`CLAGE_STUDIO_MERGE_REVIEW.md` for subsequent reconciliation, release QA and CI.
+
 Local validation on October 7, 2026. Python 3.13.6, Node 24.11.1, macOS 26.7.1
 ARM; Playwright 1.63.0 and its headless Chromium 153 distribution.
 
