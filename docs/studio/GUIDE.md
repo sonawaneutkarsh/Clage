@@ -24,6 +24,17 @@ production. Optional dependencies do not replace the from-scratch engine.
    baselines and the saved champion on five unseen seed bases without training.
 
 Keyboard: Space pause/resume, `.` step, `R` reset live run, `F` fit camera.
+Nested organism, network and ancestry inspections have a contextual **← Back**
+above the heading; Escape returns one level. Browser Back/Forward also work,
+including configuration and help dialogs. Top-level views use the workspace
+navigation without a redundant Back button. Navigation never restarts or pauses
+the engine. Selections/cameras are restored only within the same run/world;
+old browser history cannot resurrect a body from another generation. The brand
+returns to Ecosystem without reloading. Hash URLs reopen top-level views, not
+ephemeral body selections or dialog state after a page reload.
+Use the organism selector for keyboard inspection, and Tab then Enter/Space
+on neural nodes, connections and ancestry boxes. On narrow screens, the neural
+graph scrolls horizontally rather than shrinking its labels to unreadable sizes.
 Shortcuts do not intercept form typing. Frame playback speed is distinct from
 requested live ticks/s and measured render FPS. Reset reruns the frozen config.
 

@@ -87,7 +87,9 @@ function acceptState(next) {
   const runChanged = next.run_id !== state.run_id;
   const historyChanged = (next.history?.length || 0) !== (state.history?.length || 0);
   state = next;
+  if (!bundle && Number.isFinite(next.speed) && document.activeElement !== $('speed')) $('speed').value = next.speed;
   if (runChanged) {
+    $('network-detail').textContent = 'Select a node or connection to view its recorded metadata.';
     localFrames = []; lastSequence = -1; lastGeneration = -1;
     if (!bundle) { selected = null; following = false; trail = []; previousBodies.clear(); events = []; }
   }
@@ -185,11 +187,20 @@ function updateUI(refreshInspectors = true) {
     if (view === 'neural') drawNetworks();
     if (view === 'evolution') drawHistory();
   }
+  rememberNavigation(false);
 }
 
 function updateInspector() {
   const frame = currentFrame();
   const body = frame?.organisms.find(organism => organism.id === selected);
+  const choices = frame?.organisms || [];
+  const signature = `${frame?.generation}:${choices.map(item => item.id).join(',')}`;
+  if (bodyChoice.dataset.signature !== signature) {
+    bodyChoice.replaceChildren(element('option', { value: '' }, 'Select an organism…'),
+      ...choices.map(item => element('option', { value: item.id }, `Body ${item.id}`)));
+    bodyChoice.dataset.signature = signature;
+  }
+  bodyChoice.value = body ? String(body.id) : '';
   $('follow').setAttribute('aria-pressed', following);
   $('follow').textContent = following ? 'Following ✓' : 'Follow ↗';
   if (!body) {
@@ -350,19 +361,23 @@ canvas.addEventListener('pointerup', event => {
     if (body) selectBody(body.id);
   }
   dragging = null;
+  rememberNavigation();
 });
 canvas.addEventListener('pointercancel', () => dragging = null);
 canvas.addEventListener('pointerleave', () => $('hover').hidden = true);
 canvas.addEventListener('wheel', event => {
   event.preventDefault();
   camera.zoom = Math.max(.35, Math.min(10, camera.zoom * (event.deltaY < 0 ? 1.12 : .89)));
+  rememberNavigation();
 }, { passive: false });
 
 function selectBody(identity) {
+  if (identity !== selected) navigate(view, selected === null ? (view === 'ecosystem' ? 'ecosystem' : 'body lineage') : `organism ${selected}`);
   selected = identity; trail = [];
   const body = currentFrame()?.organisms.find(item => item.id === selected);
   if (body) $('genome-choice').value = body.genome;
   updateInspector(); drawNetworks(); drawHistory();
+  rememberNavigation();
 }
 
 function fitWorld() { camera.zoom = 1; camera.x = 0; camera.y = 0; following = false; updateUI(); }
@@ -382,10 +397,11 @@ function renderNetwork(target, genome, inference, width, height, detailed = true
       fill: 'none', stroke: edge.weight >= 0 ? '#87cdb0' : '#dd9d76', 'stroke-width': Math.min(4, .5 + Math.abs(edge.weight)),
       opacity: edge.enabled ? .46 : .2, 'stroke-dasharray': edge.enabled ? '' : '4 4', class: 'edge' });
     link.append(svgElement('title', {}, `${edge.in} → ${edge.out} · weight ${edge.weight.toFixed(4)} · innovation ${edge.innovation} · ${edge.enabled ? 'enabled' : 'disabled'}`));
-    link.addEventListener('click', () => $('network-detail').textContent = JSON.stringify({ kind: 'Connection', ...edge,
+    const inspectEdge = () => inspectNetwork({ kind: 'Connection', ...edge,
       source_activation: inference?.values?.[edge.in] ?? 'Not recorded',
       inference_tick: inference?.world_tick ?? 'Not recorded',
-      weighted_contribution: inference ? (edge.enabled ? inference.values[edge.in] * edge.weight : 0) : 'Not recorded' }, null, 2));
+      weighted_contribution: inference ? (edge.enabled ? inference.values[edge.in] * edge.weight : 0) : 'Not recorded' });
+    if (detailed) makeInspectable(link, `Inspect connection ${edge.in} to ${edge.out}`, inspectEdge, target.id);
     group.append(link);
   }
   const inputs = genome.nodes.filter(node => node.type === 'INPUT').sort((first, second) => first.id - second.id);
@@ -397,7 +413,7 @@ function renderNetwork(target, genome, inference, width, height, detailed = true
     const circle = svgElement('circle', { cx: position.x, cy: position.y, r: detailed ? 14 : 9, fill: color, stroke: chosen ? '#d5ffe9' : '#8fb4b8', 'stroke-width': chosen ? 3 : 1, class: 'node' });
     const detail = { kind: 'Node', ...node, activation: value ?? 'Not recorded', inference_tick: inference?.world_tick ?? 'Not recorded' };
     circle.append(svgElement('title', {}, JSON.stringify(detail)));
-    circle.addEventListener('click', () => $('network-detail').textContent = JSON.stringify(detail, null, 2));
+    if (detailed) makeInspectable(circle, `Inspect ${node.type.toLowerCase()} node ${node.id}`, () => inspectNetwork(detail), target.id);
     group.append(circle);
     let label = String(node.id);
     if (node.type === 'INPUT') label = observations[inputs.indexOf(node)] || label;
@@ -422,19 +438,39 @@ function populateGenomeChoices() {
 }
 
 function drawNetworks() {
+  const focused = document.activeElement?.getAttribute('data-inspection');
   const body = currentFrame()?.organisms.find(item => item.id === selected);
   const key = $('genome-choice').value || body?.genome;
   const genome = currentGenomes()[key];
   $('network-title').textContent = genome ? `GENOME ${key} · ${genome.nodes.length} NODES · ${genome.connections.length} CONNECTIONS` : 'SELECT A GENOME';
-  renderNetwork($('network'), genome, body?.genome === key ? body.inference : null, 800, 620);
+  renderNetwork($('network'), genome, body && body.genome === key ? body.inference : null, 800, 620);
   const compareKey = $('genome-compare').value;
   $('network-compare-card').hidden = !compareKey;
   if (compareKey) renderNetwork($('network-compare'), currentGenomes()[compareKey], null, 800, 620);
+  if (focused) document.querySelector(`[data-inspection="${focused}"]`)?.focus({ preventScroll: true });
+}
+
+function makeInspectable(target, label, inspect, graph) {
+  target.setAttribute('tabindex', '0'); target.setAttribute('role', 'button');
+  target.setAttribute('aria-label', label);
+  target.setAttribute('data-inspection', `${graph}-${label}`);
+  target.onclick = inspect;
+  target.onkeydown = event => {
+    if (event.key === 'Enter' || event.code === 'Space') { event.preventDefault(); event.stopPropagation(); inspect(); }
+  };
+}
+
+function inspectNetwork(detail) {
+  if (!navigation.detail) navigate(view, 'network');
+  navigation.detail = true;
+  $('network-detail').textContent = JSON.stringify(detail, null, 2);
+  $('network-detail').focus({ preventScroll: true });
+  rememberNavigation();
 }
 
 let graphDrag = null;
 $('network').addEventListener('wheel', event => {
-  event.preventDefault(); graphCamera.zoom = Math.max(.4, Math.min(4, graphCamera.zoom * (event.deltaY < 0 ? 1.1 : .9))); drawNetworks();
+  event.preventDefault(); graphCamera.zoom = Math.max(.4, Math.min(4, graphCamera.zoom * (event.deltaY < 0 ? 1.1 : .9))); drawNetworks(); rememberNavigation();
 }, { passive: false });
 $('network').addEventListener('pointerdown', event => {
   if (event.target.closest('.node, .edge')) return;
@@ -449,7 +485,7 @@ $('network').addEventListener('pointermove', event => {
   const group = $('network').firstElementChild;
   group?.setAttribute('transform', `translate(${graphCamera.x},${graphCamera.y}) scale(${graphCamera.zoom})`);
 });
-$('network').addEventListener('pointerup', () => graphDrag = null);
+$('network').addEventListener('pointerup', () => { graphDrag = null; rememberNavigation(); });
 $('network').addEventListener('pointercancel', () => graphDrag = null);
 
 function drawChart() {
@@ -559,9 +595,9 @@ function drawHistory() {
   else {
     const rows = history.map(row => {
       const inspect = element('button', { class: 'text-button' }, `Inspect ${row.champion} ↗`);
-      inspect.onclick = () => { $('genome-choice').value = row.champion; setView('neural'); drawNetworks(); };
+      inspect.onclick = () => { navigate('neural', 'evolution'); $('genome-choice').value = row.champion; drawNetworks(); rememberNavigation(); };
       const ancestry = element('button', { class: 'text-button' }, ' · Ancestry ↗');
-      ancestry.onclick = () => { $('evolution-genome').value = row.champion; drawEvolutionTree(); };
+      ancestry.onclick = () => { navigate('evolution', 'generation history'); $('evolution-genome').value = row.champion; drawEvolutionTree(); rememberNavigation(); };
       const navigation = element('span'); navigation.append(inspect, ancestry);
       return [row.world_generation, row.best_fitness.toFixed(3), row.mean_fitness.toFixed(3), row.species_count,
         row.mean_nodes.toFixed(1), row.mean_connections.toFixed(1), JSON.stringify(row.species), navigation];
@@ -604,12 +640,13 @@ evolutionPanel.append(evolutionToolbar, svgElement('svg', { id: 'evolution-tree'
   element('pre', { id: 'evolution-detail' }, 'Select a recorded genotype to inspect its reproduction and net mutation deltas.'),
   element('p', { class: 'fine-print' }, 'Up to four ancestral edges. Repeated boxes can refer to the same genotype. Parent selections include crossover, elite clones and champion rescues. Net mutation deltas compare the pre/post-mutation child; they are not a log of every operator invocation. This is separate from body splits within a world.'));
 $('history').after(evolutionPanel);
-evolutionChoice.onchange = drawEvolutionTree;
+evolutionChoice.onchange = () => { $('evolution-detail').textContent = ''; drawEvolutionTree(); rememberNavigation(); };
 
 function drawEvolutionTree() {
   const records = bundle ? (bundle.version === 2 ? bundle.lineage : {}) : evolutionLineage;
   const focus = $('evolution-genome').value, graph = $('evolution-tree'); graph.replaceChildren();
   if (!records?.[focus]) {
+    $('evolution-detail').textContent = 'No evolutionary provenance is available for this recording.';
     graph.append(svgElement('text', { x: 30, y: 70, fill: '#809aa5', 'font-size': 15 }, 'Evolutionary provenance is unavailable in this recording.'));
     return;
   }
@@ -638,10 +675,10 @@ function drawEvolutionTree() {
       svgElement('text', { x: entry.x, y: entry.y + 4, 'text-anchor': 'middle', fill: '#a6eccb', 'font-size': 11 }, entry.key ?? 'Unknown parent'),
       svgElement('title', {}, records[entry.key]?.kind || 'Unknown'));
     const inspect = () => {
-      if (records[entry.key]) { $('evolution-genome').value = entry.key; drawEvolutionTree(); }
+      if (records[entry.key] && entry.key !== $('evolution-genome').value) { navigate('evolution', 'ancestry'); $('evolution-genome').value = entry.key; drawEvolutionTree(); rememberNavigation(); }
     };
     group.onclick = inspect;
-    group.onkeydown = event => { if (event.key === 'Enter') inspect(); };
+    group.onkeydown = event => { if (event.key === 'Enter' || event.code === 'Space') { event.preventDefault(); event.stopPropagation(); inspect(); } };
     graph.append(group);
   }
 }
@@ -652,9 +689,97 @@ const viewText = {
   evolution: ['EVOLUTION EXPLORER', 'Across generations', 'Evaluated outcomes, genome ancestry and within-world body lineage.'],
   research: ['RESEARCH WORKBENCH', 'Ask better questions', 'Prespecified baselines, held-out worlds and portable evidence.']
 };
+const navigationSession = crypto.randomUUID();
+let rememberedNavigation = '', lastHistoryWrite = 0;
+history.scrollRestoration = 'manual';
+let navigation = { session: navigationSession, view: 'ecosystem', nested: false, modal: null };
+let livePresentation = null;
+let replayIdentity = 0;
+const backButton = element('button', { id: 'view-back', class: 'button secondary back-button', hidden: '' }, '← Back');
+const bodyChoice = element('select', { id: 'body-choice', 'aria-label': 'Select organism for inspection' });
+document.querySelector('.inspector-heading').after(bodyChoice);
+bodyChoice.onchange = () => { if (bodyChoice.value !== '') selectBody(Number(bodyChoice.value)); };
+document.querySelector('.page-heading').before(backButton);
+$('view-title').tabIndex = -1;
+$('network-detail').tabIndex = -1;
+
+function presentation() {
+  return { context: `${state.run_id}:${bundle ? replayIdentity : 'live'}`, generation: currentFrame()?.generation, selected, following,
+    camera: { ...camera }, graphCamera: { ...graphCamera }, trail: trail.map(point => [...point]),
+    genome: $('genome-choice').value, compare: $('genome-compare').value,
+    ancestor: $('evolution-genome').value, detailText: $('network-detail').textContent,
+    scroll: window.scrollY, focus: document.activeElement?.id,
+    inspectionFocus: document.activeElement?.getAttribute('data-inspection') };
+}
+
+function rememberNavigation(force = true) {
+  if (history.state?.session !== navigationSession) return;
+  const next = { ...navigation, saved: presentation() }, signature = JSON.stringify(next), now = performance.now();
+  if (signature === rememberedNavigation || (!force && now - lastHistoryWrite < 500)) return;
+  history.replaceState(next, '', `#${view}`);
+  rememberedNavigation = signature; lastHistoryWrite = now;
+}
+
+function restorePresentation(saved) {
+  if (!saved || saved.context !== `${state.run_id}:${bundle ? replayIdentity : 'live'}`) return;
+  selected = saved.generation === currentFrame()?.generation ? saved.selected : null;
+  following = selected !== null && saved.following;
+  trail = selected !== null ? saved.trail || [] : [];
+  Object.assign(camera, saved.camera); Object.assign(graphCamera, saved.graphCamera);
+  for (const [identity, value] of [['genome-choice', saved.genome], ['genome-compare', saved.compare], ['evolution-genome', saved.ancestor]]) {
+    if ([...$(identity).options].some(option => option.value === value)) $(identity).value = value;
+  }
+  $('network-detail').textContent = saved.detailText;
+  updateUI(); window.scrollTo(0, saved.scroll);
+}
+
+function navigate(next, label = null, modal = null) {
+  if (!label && next === view && !navigation.nested && !modal) return;
+  history.replaceState({ ...navigation, saved: presentation() }, '', `#${view}`);
+  navigation = { session: navigationSession, view: next, nested: Boolean(label), label, modal };
+  history.pushState(navigation, '', `#${next}`);
+  applyNavigation();
+}
+
+function applyNavigation(saved = null) {
+  for (const dialog of document.querySelectorAll('dialog[open]')) if (dialog.id !== navigation.modal) dialog.close();
+  setView(navigation.view);
+  restorePresentation(saved);
+  backButton.hidden = !navigation.nested || Boolean(navigation.modal);
+  backButton.textContent = `← Back to ${navigation.label || 'workspace'}`;
+  if (navigation.modal) { if (!$(navigation.modal).open) $(navigation.modal).showModal(); }
+  else {
+    const focus = saved?.inspectionFocus ? document.querySelector(`[data-inspection="${saved.inspectionFocus}"]`) : $(saved?.focus);
+    (focus || $('view-title')).focus({ preventScroll: true });
+  }
+  rememberNavigation();
+}
+
+backButton.onclick = () => { rememberNavigation(); history.back(); };
+window.addEventListener('popstate', event => {
+  if (event.state?.session === navigationSession) navigation = event.state;
+  else {
+    const requested = location.hash.slice(1);
+    navigation = { session: navigationSession, view: viewText[requested] ? requested : 'ecosystem', nested: false, modal: null };
+    history.replaceState(navigation, '', `#${navigation.view}`);
+  }
+  applyNavigation(navigation.saved);
+});
+for (const dialog of document.querySelectorAll('dialog')) {
+  dialog.addEventListener('cancel', event => { event.preventDefault(); history.back(); });
+}
+const initialView = location.hash.slice(1);
+navigation.view = viewText[initialView] ? initialView : 'ecosystem';
+history.replaceState(navigation, '', `#${navigation.view}`);
+applyNavigation();
+document.querySelector('.brand').onclick = event => { event.preventDefault(); navigate('ecosystem'); };
+
 function setView(next) {
   view = next;
-  for (const button of document.querySelectorAll('.nav')) button.classList.toggle('active', button.dataset.view === next);
+  for (const button of document.querySelectorAll('.nav')) {
+    button.classList.toggle('active', button.dataset.view === next);
+    if (button.dataset.view === next) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
+  }
   for (const section of document.querySelectorAll('.view')) section.classList.toggle('active-view', section.id === `${next}-view`);
   const [kicker, title, description] = viewText[next];
   $('view-kicker').textContent = kicker; $('view-title').replaceChildren(document.createTextNode(title), element('span', {}, '.')); $('view-description').textContent = description;
@@ -664,10 +789,14 @@ function setView(next) {
   chartDirty = true;
 }
 
-for (const button of document.querySelectorAll('.nav')) button.onclick = () => setView(button.dataset.view);
-$('open-neural').onclick = () => setView('neural');
-$('genome-choice').onchange = drawNetworks;
-$('genome-compare').onchange = drawNetworks;
+for (const button of document.querySelectorAll('.nav')) button.onclick = () => navigate(button.dataset.view);
+$('open-neural').onclick = () => navigate('neural', 'organism inspector');
+const clearNetworkDetail = () => {
+  $('network-detail').textContent = 'Select a node or connection to view its recorded metadata.';
+  navigation.detail = false; drawNetworks(); rememberNavigation();
+};
+$('genome-choice').onchange = clearNetworkDetail;
+$('genome-compare').onchange = clearNetworkDetail;
 $('network-fit').onclick = () => { Object.assign(graphCamera, { x: 0, y: 0, zoom: 1 }); drawNetworks(); };
 $('fit').onclick = fitWorld;
 $('grid').onclick = () => { grid = !grid; $('grid').setAttribute('aria-pressed', grid); };
@@ -701,6 +830,8 @@ $('speed').oninput = () => $('speed-label').textContent = `${$('speed').value} $
 $('speed').onchange = () => { if (!bundle) safely(() => api('/api/control', { action: 'speed', speed: Number($('speed').value) })); };
 
 function enterReplay(data) {
+  if (!bundle) livePresentation = presentation();
+  replayIdentity++;
   bundle = data; replayIndex = 0; replayPlaying = false; selected = null; trail = []; events = [];
   $('scrub').max = data.frames.length - 1;
   $('generation-jump').replaceChildren();
@@ -720,7 +851,10 @@ $('review').onclick = () => safely(async () => {
   $('live').onclick = () => {
   bundle = null; comparison = null; replayPlaying = false; selected = null; trail = [];
   $('comparison-panel').hidden = true; $('clear-compare').hidden = true;
+  document.querySelector('.compare-key').hidden = true;
   chartDirty = true; populateGenomeChoices(); acceptState(state); updateUI();
+  restorePresentation(livePresentation); livePresentation = null;
+  $('speed').value = state.speed; updateUI(false);
 };
 $('scrub').oninput = () => {
   replayIndex = Number($('scrub').value); replayPlaying = false; trail = []; selected = null;
@@ -838,13 +972,20 @@ function fillForm(config) {
   if (config.initialization) $('config-initialization').value = config.initialization;
   if (config.record !== undefined) $('config-record').checked = config.record;
 }
-$('configure').onclick = () => { if (state.config) fillForm(state.config); $('config-dialog').showModal(); };
+$('configure').onclick = () => { if (state.config) fillForm(state.config); navigate(view, 'workspace', 'config-dialog'); };
 const topConfigure = element('button', { class: 'button secondary', id: 'heading-configure', title: 'Configure experiment' }, '＋ Configure');
 document.querySelector('.heading-actions').prepend(topConfigure);
 topConfigure.onclick = $('configure').onclick;
-$('close-config').onclick = () => $('config-dialog').close();
-$('shortcuts').onclick = () => $('help-dialog').showModal();
-$('close-help').onclick = () => $('help-dialog').close();
+$('close-config').onclick = () => history.back();
+$('close-config').className = 'button secondary back-button';
+$('close-config').textContent = '← Back';
+$('close-config').setAttribute('aria-label', 'Back to previous view');
+$('shortcuts').onclick = () => navigate(view, 'workspace', 'help-dialog');
+$('close-help').onclick = () => history.back();
+$('close-help').className = 'button secondary back-button';
+$('close-help').textContent = '← Back';
+$('close-help').setAttribute('aria-label', 'Back to previous view');
+$('live').textContent = '← Back to live';
 $('preset').onchange = () => {
   const defaults = Object.fromEntries(fieldDefinitions.map(([key, , value]) => [key, value]));
   defaults.initialization = 'dense-random-v1'; defaults.record = true;
@@ -862,14 +1003,20 @@ $('config-form').onsubmit = async event => {
     const next = await api('/api/runs', formConfig());
     bundle = null; comparison = null; localFrames = []; lastSequence = -1; lastGeneration = -1; selected = null;
     previousBodies.clear(); trail = []; events = []; evaluation = null; $('evaluation').replaceChildren(); $('evaluation-export').hidden = true;
-    $('comparison-panel').hidden = true; $('config-dialog').close(); fitWorld(); acceptState(next); await loadGenomes();
+    $('comparison-panel').hidden = true; $('clear-compare').hidden = true; document.querySelector('.compare-key').hidden = true;
+    $('config-dialog').close(); fitWorld(); acceptState(next); await loadGenomes();
+    navigation = { session: navigationSession, view, nested: false, modal: null };
+    history.replaceState(navigation, '', `#${view}`); applyNavigation();
     toast('New experiment ready. Configuration frozen. Resume to advance.');
   } catch (error) { $('config-error').textContent = error.message; }
   finally { submit.disabled = false; }
 };
 
 document.addEventListener('keydown', event => {
+  if (event.defaultPrevented) return;
   if (['INPUT', 'SELECT', 'TEXTAREA'].includes(event.target.tagName) || document.querySelector('dialog[open]')) return;
+  if (event.key === 'Escape' && navigation.nested) { event.preventDefault(); history.back(); return; }
+  if (event.code === 'Space' && event.target.closest('button, [role="button"]')) return;
   if (event.code === 'Space') { event.preventDefault(); $('play').click(); }
   if (event.key === '.') $('step').click();
   if (event.key.toLowerCase() === 'f') fitWorld();
