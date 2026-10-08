@@ -13,3 +13,4 @@
 #world{position:absolute;inset:0;width:100%;height:100%}.world-footer{gap:8px;flex-wrap:wrap}
 @media(max-width:780px){.heading-actions{flex-wrap:wrap}.world-panel>.panel-toolbar{flex-wrap:wrap}.world-panel>.panel-toolbar>div{display:flex;flex-wrap:wrap;gap:5px}}
 @media(max-width:360px){.nav{flex:1;min-width:0;padding:10px 4px;font-size:13px}.nav span{font-size:9px}}
+#view-back{position:sticky;top:12px;z-index:3;background:var(--surface);box-shadow:0 5px 18px #0005}

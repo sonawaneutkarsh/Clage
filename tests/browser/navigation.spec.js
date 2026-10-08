@@ -262,3 +262,22 @@ test('world canvas fills its viewport on desktop and small screens', async ({ pa
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 });
+
+test('mobile nested Back remains on screen and returns to the previous scroll position', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('#body-choice').scrollIntoViewIfNeeded();
+  await page.locator('#body-choice').selectOption('0');
+  await expect(page.locator('#view-back')).toBeInViewport();
+  await page.locator('#open-neural').scrollIntoViewIfNeeded();
+  const sourceScroll = await page.evaluate(() => window.scrollY);
+  await page.locator('#open-neural').click();
+  await expect(page.locator('#view-back')).toBeInViewport();
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await page.locator('#network .node').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#view-back')).toBeInViewport();
+  await page.locator('#view-back').click();
+  await page.locator('#view-back').click();
+  await expect(page.locator('#ecosystem-view')).toBeVisible();
+  expect(Math.abs(await page.evaluate(() => window.scrollY) - sourceScroll)).toBeLessThanOrEqual(2);
+});

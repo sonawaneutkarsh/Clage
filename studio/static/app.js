@@ -736,10 +736,12 @@ function restorePresentation(saved) {
 
 function navigate(next, label = null, modal = null) {
   if (!label && next === view && !navigation.nested && !modal) return;
+  const changedView = next !== view;
   history.replaceState({ ...navigation, saved: presentation() }, '', `#${view}`);
   navigation = { session: navigationSession, view: next, nested: Boolean(label), label, modal };
   history.pushState(navigation, '', `#${next}`);
   applyNavigation();
+  if (changedView) { window.scrollTo(0, 0); rememberNavigation(); }
 }
 
 function applyNavigation(saved = null) {
