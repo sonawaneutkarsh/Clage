@@ -213,3 +213,24 @@ test('small-screen evolution, research, validation and comparison remain usable'
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: `${evidence}/mobile-replay-comparison.png`, fullPage: true });
 });
+
+test('starting a configured run clears stale replay comparison controls and old selections', async ({ page, request }) => {
+  await page.locator('#body-choice').selectOption('0');
+  await page.locator('#step').click();
+  await expect(page.locator('#tick')).toContainText('tick 1 /');
+  await page.locator('#review').click();
+  const replay = await (await request.get('/api/replay')).body();
+  await page.locator('#compare-import').setInputFiles({ name: 'comparison.json', mimeType: 'application/json', buffer: replay });
+  await expect(page.locator('.compare-key')).toBeVisible();
+  await page.locator('#heading-configure').click();
+  await page.locator('#config-seed').fill('100');
+  await page.locator('#config-form [type=submit]').click();
+  await expect(page.locator('#config-dialog')).not.toBeVisible();
+  await expect(page.locator('#world-seed')).toContainText('100');
+  await expect(page.locator('#mode')).toContainText('LIVE · PAUSED');
+  for (const selector of ['.compare-key', '#clear-compare', '#comparison-panel', '#timeline', '#view-back']) {
+    await expect(page.locator(selector)).toBeHidden();
+  }
+  await page.goBack();
+  await expect(page.locator('#body-choice')).toHaveValue('');
+});
