@@ -234,3 +234,16 @@ test('starting a configured run clears stale replay comparison controls and old 
   await page.goBack();
   await expect(page.locator('#body-choice')).toHaveValue('');
 });
+
+test('world canvas fills its viewport on desktop and small screens', async ({ page }) => {
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    const dimensions = await page.evaluate(() => {
+      const canvas = document.getElementById('world'), wrap = document.getElementById('canvas-wrap');
+      return { canvas: [canvas.clientWidth, canvas.clientHeight], wrap: [wrap.clientWidth, wrap.clientHeight] };
+    });
+    expect(dimensions.canvas).toEqual(dimensions.wrap);
+    expect(dimensions.canvas[1]).toBeGreaterThanOrEqual(360);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
