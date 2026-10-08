@@ -174,6 +174,10 @@ test('keyboard graph inspection does not trigger playback and hash reload opens 
   await page.locator('#network .node').first().focus();
   await page.keyboard.press('Space');
   await expect(page.locator('#network-detail')).toContainText('"kind": "Node"');
+  await page.locator('#view-back').click();
+  await page.locator('#network .edge').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#network-detail')).toContainText('"kind": "Connection"');
   expect((await (await request.get('/api/state')).json()).paused).toBe(true);
   await page.locator('#genome-choice').selectOption({ index: 1 });
   await expect(page.locator('#network-detail')).not.toContainText('"kind": "Node"');
@@ -181,6 +185,17 @@ test('keyboard graph inspection does not trigger playback and hash reload opens 
   await expect(page.locator('#neural-view')).toBeVisible();
   await expect(page.locator('#network .node')).toHaveCount(13);
   await expect(page.locator('#view-back')).toBeHidden();
+});
+
+test('narrow neural graphs accept horizontal wheel scrolling without hijacking it as zoom', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('[data-view=neural]').click();
+  await page.locator('#network').hover();
+  await page.mouse.wheel(300, 0);
+  await expect.poll(() => page.locator('#network').evaluate(node => node.parentElement.scrollLeft)).toBeGreaterThan(0);
+  await page.locator('#network .node').last().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#network-detail')).toContainText('"type": "OUTPUT"');
 });
 
 test('small-screen evolution, research, validation and comparison remain usable', async ({ page, request }) => {

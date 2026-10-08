@@ -470,6 +470,7 @@ function inspectNetwork(detail) {
 
 let graphDrag = null;
 $('network').addEventListener('wheel', event => {
+  if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
   event.preventDefault(); graphCamera.zoom = Math.max(.4, Math.min(4, graphCamera.zoom * (event.deltaY < 0 ? 1.1 : .9))); drawNetworks(); rememberNavigation();
 }, { passive: false });
 $('network').addEventListener('pointerdown', event => {
